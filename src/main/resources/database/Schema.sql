@@ -14,9 +14,9 @@ SET FOREIGN_KEY_CHECKS = 1;
 CREATE TABLE Users (
                        userId BIGINT AUTO_INCREMENT PRIMARY KEY,
                        userName VARCHAR(100) NOT NULL,
-                       userRole ENUM('ADMIN','MANAGER','RECEPTIONIST') NOT NULL,
+                       userRole ENUM('MANAGER','RECEPTIONIST') NOT NULL,
                        userEmail VARCHAR(100) NOT NULL UNIQUE,
-                       password_hash VARCHAR(255) NOT NULL,
+                       password VARCHAR(255) NOT NULL,
                        userStatus ENUM('ACTIVE','INACTIVE','SUSPENDED') NOT NULL DEFAULT 'ACTIVE',
                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP

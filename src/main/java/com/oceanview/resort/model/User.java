@@ -7,18 +7,18 @@ public class User {
     private String userName;
     private String password;
     private String userEmail;
-    private String userRole;
+    private UserRole userRole;
     private boolean userStatus;
     private LocalDateTime created_at;
     private LocalDateTime updated_at;
 
-    public enum userRole {
+    public enum UserRole {
         Receptionist, Manager
     }
 
     public User() {}
 
-    public User(Long userId, String userName, String userEmail, String password, String userRole,
+    public User(Long userId, String userName, String userEmail, String password, UserRole userRole,
                 boolean userStatus) {
         this.userId =userId;
         this.userEmail = userEmail;
@@ -40,8 +40,8 @@ public class User {
     public String getUserName() {return userName; }
     public void setUserName(String userName) {this.userName = userName;}
 
-    public String getUserRole() {return userRole; }
-    public void setUserRole(String userRole) {this.userRole = userRole;}
+    public UserRole getUserRole() {return userRole; }
+    public void setUserRole(UserRole userRole) {this.userRole = userRole;}
 
     public boolean getUserStatus() {return userStatus; }
     public void setUserStatus(boolean userStatus) {this.userStatus = userStatus;}

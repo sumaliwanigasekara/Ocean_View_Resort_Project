@@ -1,4 +1,4 @@
-package com.oceanview.resort.model;
+package com.oceanview.model;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

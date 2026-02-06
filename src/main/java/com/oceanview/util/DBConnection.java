@@ -1,4 +1,4 @@
-package com.oceanview.resort.util;
+package com.oceanview.util;
 
 import java.io.IOException;
 import java.io.InputStream;

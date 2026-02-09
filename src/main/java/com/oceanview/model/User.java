@@ -8,18 +8,22 @@ public class User {
     private String password;
     private String userEmail;
     private UserRole userRole;
-    private boolean userStatus;
+    private UserStatus userStatus;
     private LocalDateTime created_at;
     private LocalDateTime updated_at;
 
     public enum UserRole {
-        Receptionist, Manager
+        MANAGER, RECEPTIONIST
+    }
+
+    public enum UserStatus {
+        ACTIVE, INACTIVE, SUSPENDED
     }
 
     public User() {}
 
     public User(Long userId, String userName, String userEmail, String password, UserRole userRole,
-                boolean userStatus) {
+               UserStatus userStatus) {
         this.userId =userId;
         this.userEmail = userEmail;
         this.password = password;
@@ -43,8 +47,8 @@ public class User {
     public UserRole getUserRole() {return userRole; }
     public void setUserRole(UserRole userRole) {this.userRole = userRole;}
 
-    public boolean getUserStatus() {return userStatus; }
-    public void setUserStatus(boolean userStatus) {this.userStatus = userStatus;}
+    public UserStatus getUserStatus() {return userStatus; }
+    public void setUserStatus(UserStatus userStatus) {this.userStatus = userStatus;}
 
     public LocalDateTime getCreated_at() {return created_at; }
     public void setCreated_at(LocalDateTime created_at) {this.created_at = created_at;}

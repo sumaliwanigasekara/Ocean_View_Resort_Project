@@ -1,3 +1,4 @@
+
 package com.oceanview.service;
 
 import com.oceanview.dao.UserDAO;
@@ -25,7 +26,8 @@ public class AuthServiceImplTest {
 
     @Test
     public void login_inactiveUser_returnsFailure() {
-        User user = new User(1L, "Asha", "user@example.com", "secret", User.UserRole.Manager, false);
+        User user = new User(1L, "Asha", "user@example.com", "secret",
+                User.UserRole.MANAGER, User.UserStatus.INACTIVE);
         AuthServiceImpl service = new AuthServiceImpl(new FakeUserDAO(user));
 
         LoginResponse response = service.login(new LoginRequest("user@example.com", "secret"));
@@ -36,7 +38,8 @@ public class AuthServiceImplTest {
 
     @Test
     public void login_wrongPassword_returnsFailure() {
-        User user = new User(1L, "Asha", "user@example.com", "secret", User.UserRole.Manager, true);
+        User user = new User(1L, "Asha", "user@example.com", "secret",
+                User.UserRole.MANAGER, User.UserStatus.ACTIVE);
         AuthServiceImpl service = new AuthServiceImpl(new FakeUserDAO(user));
 
         LoginResponse response = service.login(new LoginRequest("user@example.com", "wrong"));
@@ -47,14 +50,15 @@ public class AuthServiceImplTest {
 
     @Test
     public void login_validCredentials_returnsSuccess() {
-        User user = new User(1L, "Asha", "user@example.com", "secret", User.UserRole.Manager, true);
+        User user = new User(1L, "Asha", "user@example.com", "secret",
+                User.UserRole.MANAGER, User.UserStatus.ACTIVE);
         AuthServiceImpl service = new AuthServiceImpl(new FakeUserDAO(user));
 
         LoginResponse response = service.login(new LoginRequest("user@example.com", "secret"));
 
         assertTrue(response.isSuccess());
         assertEquals("Asha", response.getUserName());
-        assertEquals("Manager", response.getRole());
+        assertEquals("MANAGER", response.getRole());
     }
 
     private static class FakeUserDAO implements UserDAO {

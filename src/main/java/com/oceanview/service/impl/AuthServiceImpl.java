@@ -21,7 +21,7 @@ public class AuthServiceImpl implements AuthService {
         if (user == null) {
             return LoginResponse.failure("Invalid credentials.");
         }
-        if (!user.getUserStatus()) {
+        if (user.getUserStatus() != User.UserStatus.ACTIVE) {
             return LoginResponse.failure("User is inactive.");
         }
         if (!Objects.equals(user.getPassword(), request.getPassword())) {

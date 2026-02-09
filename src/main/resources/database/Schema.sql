@@ -21,6 +21,10 @@ CREATE TABLE IF NOT EXISTS users (
                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+
+INSERT INTO users (userName, userRole, userEmail, password, userStatus)
+VALUES ('Manager', 'MANAGER', 'manager@oceanview.com', 'secret', 'ACTIVE');
+
 CREATE TABLE IF NOT EXISTS guests (
                         guestId BIGINT AUTO_INCREMENT PRIMARY KEY,
                         guestPassport VARCHAR(50) UNIQUE,

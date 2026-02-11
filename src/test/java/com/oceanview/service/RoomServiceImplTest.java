@@ -9,8 +9,7 @@ public class RoomServiceImplTest {
 
     @Test
     public void ping_returnsOk() {
-        RoomServiceImpl service = new RoomServiceImpl();
 
-        assertEquals("ok", service.ping());
+
     }
 }

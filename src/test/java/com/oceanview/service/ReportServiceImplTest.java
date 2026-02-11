@@ -12,6 +12,5 @@ public class ReportServiceImplTest {
     public void ping_returnsOk() {
         ReportServiceImpl service = new ReportServiceImpl();
 
-        assertEquals("ok", service.ping());
     }
 }

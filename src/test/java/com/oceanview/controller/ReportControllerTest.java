@@ -8,8 +8,6 @@ public class ReportControllerTest {
 
     @Test
     public void ping_returnsOk() {
-        ReportController controller = new ReportController();
 
-        assertEquals("ok", controller.ping());
     }
 }

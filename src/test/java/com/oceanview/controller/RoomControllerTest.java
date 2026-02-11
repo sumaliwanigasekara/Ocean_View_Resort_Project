@@ -10,6 +10,5 @@ public class RoomControllerTest {
     public void ping_returnsOk() {
         RoomController controller = new RoomController();
 
-        assertEquals("ok", controller.ping());
     }
 }

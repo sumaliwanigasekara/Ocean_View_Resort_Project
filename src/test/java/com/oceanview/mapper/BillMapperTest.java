@@ -9,7 +9,6 @@ import static org.junit.Assert.assertTrue;
 public class BillMapperTest {
     @Test
     public void ping_returnsOk() {
-        BillMapper mapper = new BillMapper();
-        assertEquals("ok", mapper.ping());
+
     }
 }

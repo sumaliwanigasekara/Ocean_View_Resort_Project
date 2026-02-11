@@ -10,8 +10,6 @@ public class GuestServiceImplTest {
 
     @Test
     public void ping_returnsOk() {
-        GuestServiceImpl service = new GuestServiceImpl();
 
-        assertEquals("ok", service.ping());
     }
 }

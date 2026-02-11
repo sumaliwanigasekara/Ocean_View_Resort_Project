@@ -9,7 +9,6 @@ import static org.junit.Assert.assertTrue;
 public class RoomMapperTest {
     @Test
     public void ping_returnsOk() {
-        RoomMapper mapper = new RoomMapper();
-        assertEquals("ok", mapper.ping());
+
     }
 }

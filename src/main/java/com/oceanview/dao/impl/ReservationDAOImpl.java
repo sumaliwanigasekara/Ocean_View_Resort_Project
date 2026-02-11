@@ -99,6 +99,96 @@ public class ReservationDAOImpl implements ReservationDAO {
         }
     }
 
+
+    @Override
+    public long count() {
+        String sql = "SELECT COUNT(*) FROM reservations";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getLong(1);
+            }
+            return 0;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public long countByStatus(Reservation.ReservationStatus status) {
+        String sql = "SELECT COUNT(*) FROM reservations WHERE status = ?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, status.name());
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getLong(1);
+            }
+            return 0;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public List<Reservation> findBetweenDates(LocalDate start, LocalDate end) {
+        String sql = "SELECT reservationId, guestId, roomId, check_in_date, check_out_date, number_of_guests, status, total_amount " +
+                "FROM reservations WHERE check_in_date >= ? AND check_out_date <= ? ORDER BY check_in_date";
+        List<Reservation> reservations = new ArrayList<>();
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setDate(1, java.sql.Date.valueOf(start));
+            ps.setDate(2, java.sql.Date.valueOf(end));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                reservations.add(mapReservation(rs));
+            }
+            return reservations;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public List<Reservation> findTodayCheckIns() {
+        String sql = "SELECT reservationId, guestId, roomId, check_in_date, check_out_date, number_of_guests, status, total_amount " +
+                "FROM reservations WHERE check_in_date = CURDATE()";
+        List<Reservation> reservations = new ArrayList<>();
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                reservations.add(mapReservation(rs));
+            }
+            return reservations;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public List<Reservation> findTodayCheckOuts() {
+        String sql = "SELECT reservationId, guestId, roomId, check_in_date, check_out_date, number_of_guests, status, total_amount " +
+                "FROM reservations WHERE check_out_date = CURDATE()";
+        List<Reservation> reservations = new ArrayList<>();
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                reservations.add(mapReservation(rs));
+            }
+            return reservations;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
     private Reservation mapReservation(ResultSet rs) throws Exception {
         Reservation reservation = new Reservation();
         reservation.setReservationId(rs.getLong("reservationId"));

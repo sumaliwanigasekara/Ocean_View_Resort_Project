@@ -11,6 +11,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Types;
 
+import java.util.List;
+import java.util.ArrayList;
+
+import java.time.LocalDate;
+
 public class BillDAOImpl implements BillDAO {
     private static final String FIND_BY_ID_SQL =
             "SELECT billId, reservationId, room_charges, service_charges, tax_amount, discount_amount, total_amount, status " +
@@ -85,6 +90,65 @@ public class BillDAOImpl implements BillDAO {
 
             long billId = cs.getLong(4);
             return findById(billId);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+
+    @Override
+    public BigDecimal calculateRevenue(LocalDate start, LocalDate end) {
+        String sql = "SELECT COALESCE(SUM(total_amount), 0) FROM bills " +
+                "WHERE status = 'PAID' AND DATE(paid_at) >= ? AND DATE(paid_at) <= ?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setDate(1, java.sql.Date.valueOf(start));
+            ps.setDate(2, java.sql.Date.valueOf(end));
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getBigDecimal(1);
+            }
+            return BigDecimal.ZERO;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public List<Bill> findBetweenDates(LocalDate start, LocalDate end) {
+        String sql = "SELECT billId, reservationId, room_charges, service_charges, tax_amount, discount_amount, total_amount, status " +
+                "FROM bills WHERE DATE(created_at) >= ? AND DATE(created_at) <= ?";
+        List<Bill> bills = new ArrayList<>();
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setDate(1, java.sql.Date.valueOf(start));
+            ps.setDate(2, java.sql.Date.valueOf(end));
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                bills.add(mapBill(rs));
+            }
+            return bills;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public List<Bill> findByStatus(Bill.BillStatus status) {
+        String sql = "SELECT billId, reservationId, room_charges, service_charges, tax_amount, discount_amount, total_amount, status " +
+                "FROM bills WHERE status = ?";
+        List<Bill> bills = new ArrayList<>();
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, status.name());
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                bills.add(mapBill(rs));
+            }
+            return bills;
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

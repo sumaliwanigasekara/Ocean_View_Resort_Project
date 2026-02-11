@@ -17,6 +17,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResponse login(LoginRequest request) {
+        if (request == null || request.getEmail() == null || request.getPassword() == null) {
+            return LoginResponse.failure("Email and password are required.");
+        }
         User user = userDAO.findByEmail(request.getEmail());
         if (user == null) {
             return LoginResponse.failure("Invalid credentials.");

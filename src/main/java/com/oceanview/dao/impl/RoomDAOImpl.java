@@ -91,6 +91,59 @@ public class RoomDAOImpl implements RoomDAO {
         }
     }
 
+
+    @Override
+    public long count() {
+        String sql = "SELECT COUNT(*) FROM rooms";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getLong(1);
+            }
+            return 0;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public int countByStatus(Room.RoomStatus status) {
+        String sql = "SELECT COUNT(*) FROM rooms WHERE roomStatus = ?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, status.name());
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+            return 0;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public List<Room> findByRoomType(Room.RoomType type) {
+        String sql = "SELECT roomId, roomType, ratePerNight, max_occupancy, roomStatus " +
+                "FROM rooms WHERE roomType = ?";
+        List<Room> rooms = new ArrayList<>();
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, type.name());
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                rooms.add(mapRoom(rs));
+            }
+            return rooms;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
     private Room mapRoom(ResultSet rs) throws Exception {
         Room room = new Room();
         room.setRoomId(rs.getLong("roomId"));

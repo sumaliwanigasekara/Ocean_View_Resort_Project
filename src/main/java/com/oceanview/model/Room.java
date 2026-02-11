@@ -37,14 +37,14 @@ public class Room {
     public RoomType getRoomType() { return roomType; }
     public void setRoomType(RoomType roomType) { this.roomType = roomType; }
 
-    public BigDecimal getRateePerNight() { return ratePerNight; }
+    public BigDecimal getRatePerNight() { return ratePerNight; }
     public void setRatePerNight(BigDecimal ratePerNight) { this.ratePerNight = ratePerNight; }
 
     public int getMaxOccupancy() { return maxOccupancy; }
     public void setMaxOccupancy(int maxOccupancy) { this.maxOccupancy = maxOccupancy; }
 
-    public RoomStatus getStatus() { return roomStatus; }
-    public void setStatus(RoomStatus status) { this.roomStatus = status; }
+    public RoomStatus getRoomStatus() { return roomStatus; }
+    public void setRoomStatus(RoomStatus status) { this.roomStatus = status; }
 
     public LocalDateTime getCreated_at() { return created_at; }
     public void setCreated_at(LocalDateTime created_at) { this.created_at = created_at; }

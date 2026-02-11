@@ -10,15 +10,17 @@ import java.sql.ResultSet;
 
 public class UserDAOImpl implements UserDAO {
 
+    private static final String FIND_BY_EMAIL_SQL =
+            "SELECT userId, userName, userEmail, password, userRole, userStatus " +
+                    "FROM users WHERE userEmail = ?";
+
     @Override
     public User findByEmail(String email) {
         try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(
-                     "SELECT userId, userName, userEmail, password, userRole, userStatus FROM users WHERE userEmail = ?")) {
+             PreparedStatement ps = con.prepareStatement(FIND_BY_EMAIL_SQL)) {
 
             ps.setString(1, email);
             ResultSet rs = ps.executeQuery();
-
             if (rs.next()) {
                 User user = new User();
                 user.setUserId(rs.getLong("userId"));
@@ -30,8 +32,8 @@ public class UserDAOImpl implements UserDAO {
                 return user;
             }
             return null;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
     }
 }

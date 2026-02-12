@@ -10,17 +10,27 @@ public interface ReservationDAO {
 
     Reservation findById(Long reservationId);
 
-    boolean hasOverlappingReservation(Long roomId, LocalDate checkIn, LocalDate checkOut);
+    default boolean hasOverlappingReservation(Long roomId, java.time.LocalDate checkIn, java.time.LocalDate checkOut) {
+        return false;
+    }
 
-    List<Reservation> listByDateRange(LocalDate from, LocalDate to);
+    default java.util.List<Reservation> listByDateRange(java.time.LocalDate from, java.time.LocalDate to) {
+        return java.util.List.of();
+    }
 
-    long count();
+    default long count() { return 0; }
 
-    long countByStatus(Reservation.ReservationStatus status);
+    default long countByStatus(Reservation.ReservationStatus status) { return 0; }
 
-    java.util.List<Reservation> findBetweenDates(java.time.LocalDate start, java.time.LocalDate end);
+    default java.util.List<Reservation> findBetweenDates(java.time.LocalDate start, java.time.LocalDate end) {
+        return java.util.List.of();
+    }
 
-    java.util.List<Reservation> findTodayCheckIns();
+    default java.util.List<Reservation> findTodayCheckIns() {
+        return java.util.List.of();
+    }
 
-    java.util.List<Reservation> findTodayCheckOuts();
+    default java.util.List<Reservation> findTodayCheckOuts() {
+        return java.util.List.of();
+    }
 }

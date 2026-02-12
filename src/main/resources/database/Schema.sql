@@ -49,6 +49,15 @@ CREATE TABLE IF NOT EXISTS rooms (
                        updated_at TIMESTAMP NULL
 );
 
+
+INSERT INTO rooms (rooms.roomType, ratePerNight, max_occupancy, roomStatus) VALUES
+  ('SINGLE', 120.00, 1, 'AVAILABLE'),
+  ('DOUBLE', 180.00, 2, 'AVAILABLE'),
+  ('TWIN', 170.00, 2, 'AVAILABLE'),
+  ('SUITE', 320.00, 3, 'AVAILABLE'),
+  ('DELUXE', 280.00, 3, 'AVAILABLE'),
+  ('PRESIDENTIAL', 650.00, 4, 'AVAILABLE');
+
 CREATE TABLE IF NOT EXISTS reservations (
                                             reservationId BIGINT AUTO_INCREMENT PRIMARY KEY,
                                             guestId BIGINT NOT NULL,

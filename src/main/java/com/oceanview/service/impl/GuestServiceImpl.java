@@ -1,7 +1,6 @@
 package com.oceanview.service.impl;
 
 import com.oceanview.dao.GuestDAO;
-import com.oceanview.messaging.KafkaEventProducer;
 import com.oceanview.model.Guest;
 import com.oceanview.service.GuestService;
 import com.oceanview.util.ValidationUtil;
@@ -11,11 +10,9 @@ import java.util.Objects;
 
 public class GuestServiceImpl implements GuestService {
     private final GuestDAO guestDAO;
-    private final KafkaEventProducer kafkaProducer;
 
     public GuestServiceImpl(GuestDAO guestDAO) {
         this.guestDAO = Objects.requireNonNull(guestDAO, "guestDAO");
-        this.kafkaProducer = null;
     }
 
 
@@ -27,11 +24,7 @@ public class GuestServiceImpl implements GuestService {
         ValidationUtil.requirePhone(guest.getGuestContact());
         ValidationUtil.requireNonBlank(guest.getGuestNIC(), "Guest NIC");
 
-        Guest saved = guestDAO.save(guest);
-        if (kafkaProducer != null) {
-            kafkaProducer.publishGuestRegistered(saved);
-        }
-        return saved;
+        return guestDAO.save(guest);
     }
 
 

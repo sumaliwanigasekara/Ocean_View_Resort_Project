@@ -7,8 +7,11 @@ import com.oceanview.util.DBConnection;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class RoomDAOImpl implements RoomDAO {
     private static final String FIND_BY_ID_SQL =
@@ -91,7 +94,6 @@ public class RoomDAOImpl implements RoomDAO {
         }
     }
 
-
     @Override
     public long count() {
         String sql = "SELECT COUNT(*) FROM rooms";
@@ -139,6 +141,66 @@ public class RoomDAOImpl implements RoomDAO {
                 rooms.add(mapRoom(rs));
             }
             return rooms;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public Map<String, Object> getRoomTypeSummary(Room.RoomType type, LocalDate date) {
+        String sql =
+                "SELECT " +
+                        "  r.roomType, " +
+                        "  MIN(r.ratePerNight) AS ratePerNight, " +
+                        "  MAX(r.max_occupancy) AS maxOccupancy, " +
+                        "  COUNT(*) AS totalRooms, " +
+                        "  SUM(CASE " +
+                        "      WHEN r.roomStatus = 'MAINTENANCE' THEN 1 " +
+                        "      WHEN EXISTS ( " +
+                        "          SELECT 1 FROM reservations z " +
+                        "          WHERE z.roomId = r.roomId " +
+                        "            AND z.status IN ('PENDING','CONFIRMED','CHECKED_IN') " +
+                        "            AND z.check_in_date <= ? " +
+                        "            AND z.check_out_date > ? " +
+                        "      ) THEN 1 " +
+                        "      ELSE 0 " +
+                        "  END) AS unavailableRooms " +
+                        "FROM rooms r " +
+                        "WHERE r.roomType = ? " +
+                        "GROUP BY r.roomType";
+
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setDate(1, java.sql.Date.valueOf(date));
+            ps.setDate(2, java.sql.Date.valueOf(date));
+            ps.setString(3, type.name());
+
+            ResultSet rs = ps.executeQuery();
+            if (!rs.next()) {
+                return Map.of(
+                        "roomType", type.name(),
+                        "ratePerNight", null,
+                        "maxOccupancy", 0,
+                        "totalRooms", 0,
+                        "unavailableRooms", 0,
+                        "availableRooms", 0
+                );
+            }
+
+            int totalRooms = rs.getInt("totalRooms");
+            int unavailableRooms = rs.getInt("unavailableRooms");
+            int availableRooms = Math.max(0, totalRooms - unavailableRooms);
+
+            Map<String, Object> summary = new HashMap<>();
+            summary.put("roomType", rs.getString("roomType"));
+            summary.put("ratePerNight", rs.getBigDecimal("ratePerNight"));
+            summary.put("maxOccupancy", rs.getInt("maxOccupancy"));
+            summary.put("totalRooms", totalRooms);
+            summary.put("unavailableRooms", unavailableRooms);
+            summary.put("availableRooms", availableRooms);
+            return summary;
+
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

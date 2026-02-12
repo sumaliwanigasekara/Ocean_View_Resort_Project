@@ -3,6 +3,9 @@ package com.oceanview.service.impl;
 import com.oceanview.dao.BillDAO;
 import com.oceanview.dao.ReservationDAO;
 import com.oceanview.dao.RoomDAO;
+import com.oceanview.dao.impl.BillDAOImpl;
+import com.oceanview.dao.impl.ReservationDAOImpl;
+import com.oceanview.dao.impl.RoomDAOImpl;
 import com.oceanview.model.Bill.BillStatus;
 import com.oceanview.model.Reservation.ReservationStatus;
 import com.oceanview.model.Room.RoomStatus;
@@ -24,6 +27,10 @@ public class ReportServiceImpl implements ReportService {
         this.reservationDAO = reservationDAO;
         this.roomDAO = roomDAO;
         this.billDAO = billDAO;
+    }
+
+    public ReportServiceImpl() {
+        this(new ReservationDAOImpl(), new RoomDAOImpl(), new BillDAOImpl());
     }
 
     @Override

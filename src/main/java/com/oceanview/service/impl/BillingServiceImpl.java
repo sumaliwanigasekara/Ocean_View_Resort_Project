@@ -15,6 +15,10 @@ public class BillingServiceImpl implements BillingService {
         this.billDAO = Objects.requireNonNull(billDAO, "billDAO");
     }
 
+    public BillingServiceImpl() {
+        this.billDAO = null;
+    }
+
     @Override
     public BigDecimal calculateTotal(Bill bill) {
         if (bill == null || bill.getRoomCharges() == null || bill.getServiceCharges() == null

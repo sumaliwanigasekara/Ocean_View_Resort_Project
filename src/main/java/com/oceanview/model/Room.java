@@ -13,7 +13,7 @@ public class Room {
     private LocalDateTime updated_at;
 
     public enum RoomType {
-        SINGLE, DOUBLE, TWIN, SUITE, DELUXE
+        SINGLE, DOUBLE, TWIN, SUITE, DELUXE, PRESIDENTIAL
     }
 
     public enum RoomStatus {

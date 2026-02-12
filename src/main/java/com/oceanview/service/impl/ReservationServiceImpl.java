@@ -3,7 +3,6 @@ package com.oceanview.service.impl;
 
 import com.oceanview.dao.ReservationDAO;
 import com.oceanview.model.Reservation;
-import com.oceanview.service.EmailService;
 import com.oceanview.service.ReservationService;
 import com.oceanview.util.ValidationUtil;
 
@@ -13,11 +12,9 @@ import java.util.Objects;
 
 public class ReservationServiceImpl implements ReservationService {
     private final ReservationDAO reservationDAO;
-    private final EmailService emailService;
 
-    public ReservationServiceImpl(ReservationDAO reservationDAO, EmailService emailService) {
+    public ReservationServiceImpl(ReservationDAO reservationDAO) {
         this.reservationDAO = Objects.requireNonNull(reservationDAO, "reservationDAO");
-        this.emailService = emailService;
     }
 
     @Override
@@ -37,11 +34,7 @@ public class ReservationServiceImpl implements ReservationService {
             reservation.setStatus(Reservation.ReservationStatus.PENDING);
         }
 
-        Reservation saved = reservationDAO.save(reservation);
-        if (emailService != null) {
-            emailService.sendReservationAlert(saved);
-        }
-        return saved;
+        return reservationDAO.save(reservation);
     }
 
     @Override

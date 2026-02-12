@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help - Ocean View Resort</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h1>🌊 Ocean View</h1>
+            <span>Resort Management</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+            <a href="guests.html" class="nav-link">👥 Guests</a>
+            <a href="rooms.html" class="nav-link">🛏️ Rooms</a>
+            <a href="reservations.html" class="nav-link">📅 Reservations</a>
+            <a href="billing.html" class="nav-link">💳 Billing</a>
+            <a href="reports.html" class="nav-link">📈 Reports</a>
+            <a href="help.html" class="nav-link active">❓ Help</a>
+            <button id="logoutBtn" class="btn btn-logout">Logout</button>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="page-header">
+            <div>
+                <h1 class="page-title">Help & Guidelines</h1>
+                <p class="page-subtitle">How to use the reservation system</p>
+            </div>
+        </header>
+
+        <div class="page-body">
+            <div class="card">
+                <div class="card-body">
+                    <h3>Login</h3>
+                    <p>Use your staff email and password to access the system.</p>
+
+                    <h3>Register a Guest</h3>
+                    <p>Go to Guests, fill the form, and click “Save Guest”.</p>
+
+                    <h3>Create a Reservation</h3>
+                    <p>Go to Reservations, enter Guest ID, Room ID, dates, and submit.</p>
+
+                    <h3>Generate a Bill</h3>
+                    <p>Go to Billing, enter Reservation ID and charges, then generate.</p>
+
+                    <h3>Reports</h3>
+                    <p>Use Reports to view occupancy, revenue, and booking summaries.</p>
+
+                    <h3>Logout</h3>
+                    <p>Use the logout button to end your session safely.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+<script>
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        const ctx = window.location.pathname.split('/')[1];
+        const base = ctx && !ctx.includes('.') ? `/${ctx}` : '';
+
+        try {
+            await fetch(`${base}/api/auth/logout`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+        } finally {
+            window.location.href = 'index.html';
+        }
+    });
+</script>
+</body>
+</html>

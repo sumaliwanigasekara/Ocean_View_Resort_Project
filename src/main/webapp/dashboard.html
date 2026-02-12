@@ -1,0 +1,128 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Ocean View Resort</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h1>🌊 Ocean View</h1>
+            <span>Resort Management</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-link active">📊 Dashboard</a>
+            <a href="guests.html" class="nav-link">👥 Guests</a>
+            <a href="rooms.html" class="nav-link">🛏️ Rooms</a>
+            <a href="reservations.html" class="nav-link">📅 Reservations</a>
+            <a href="billing.html" class="nav-link">💳 Billing</a>
+            <a href="reports.html" class="nav-link">📈 Reports</a>
+            <a href="help.html" class="nav-link">📈 Help</a>
+            <button id="logoutBtn" class="btn btn-logout">Logout</button>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="page-header">
+            <div>
+                <h1 class="page-title">Dashboard</h1>
+                <p class="page-subtitle" id="currentDate"></p>
+            </div>
+        </header>
+
+        <div class="page-body">
+            <div class="stats-grid" id="statsContainer">
+
+                <div class="dashboard-summary-grid">
+                    <section class="summary-card">
+                        <div class="summary-card-header">
+                            <h3>Today's Check-ins</h3>
+                            <a href="reservations.html" class="summary-link">View All</a>
+                        </div>
+                        <div class="summary-card-body">
+                            <p class="empty-text">No check-ins scheduled for today</p>
+                        </div>
+                    </section>
+
+                    <section class="summary-card">
+                        <div class="summary-card-header">
+                            <h3>Today's Check-outs</h3>
+                            <a href="reservations.html" class="summary-link">View All</a>
+                        </div>
+                        <div class="summary-card-body">
+                            <p class="empty-text">No check-outs scheduled for today</p>
+                        </div>
+                    </section>
+                </div>
+
+                <section class="summary-card summary-card-full">
+                    <div class="summary-card-header">
+                        <h3>Recent Reservations</h3>
+                        <a href="reservations.html" class="summary-link">View All</a>
+                    </div>
+                    <div class="summary-card-body">
+                        <p class="empty-text">No reservations found</p>
+                    </div>
+                </section>
+                <div class="loading"><div class="spinner"></div></div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString();
+
+    async function loadStats() {
+        try {
+            const response = await API.reports.getDashboard();
+            if (response.success) {
+                const data = response.data;
+                document.getElementById('statsContainer').innerHTML = `
+          <div class="stat-card">
+            <div class="stat-value">${data.availableRooms || 0}</div>
+            <div class="stat-label">Available Rooms</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${data.occupancyRate || 0}%</div>
+            <div class="stat-label">Occupancy Rate</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${data.todayCheckIns || 0}</div>
+            <div class="stat-label">Today Check-ins</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${data.monthlyRevenue || 0}</div>
+            <div class="stat-label">Monthly Revenue</div>
+          </div>
+        `;
+            }
+        } catch (e) {
+            document.getElementById('statsContainer').innerHTML = '<p>Error loading stats</p>';
+        }
+    }
+
+    loadStats();
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+        const ctx = window.location.pathname.split('/')[1];
+        const base = ctx && !ctx.includes('.') ? `/${ctx}` : '';
+
+        try {
+        await fetch(`${base}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+    });
+    } finally {
+        window.location.href = 'index.html';
+    }
+    });
+</script>
+
+</body>
+</html>

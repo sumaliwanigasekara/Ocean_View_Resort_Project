@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reservations - Ocean View Resort</title>
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h1>🌊 Ocean View</h1>
+            <span>Resort Management</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+            <a href="guests.html" class="nav-link">👥 Guests</a>
+            <a href="rooms.html" class="nav-link">🛏️ Rooms</a>
+            <a href="reservations.html" class="nav-link active">📅 Reservations</a>
+            <a href="billing.html" class="nav-link">💳 Billing</a>
+            <a href="reports.html" class="nav-link">📈 Reports</a>
+            <a href="help.html" class="nav-link">❓ Help</a>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="page-header">
+            <div>
+                <h1 class="page-title">Reservations</h1>
+                <p class="page-subtitle">Add and view reservations</p>
+            </div>
+        </header>
+
+        <div class="page-body">
+            <div class="card">
+                <div class="card-body">
+                    <h3>Add Reservation</h3>
+                    <form id="reservationForm">
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label for="guestId">Guest *</label>
+                                <select id="guestId" class="form-control" required>
+                                    <option value="">Loading guests...</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="roomId">Room *</label>
+                                <select id="roomId" class="form-control" required>
+                                    <option value="">Loading rooms...</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label for="checkInDate">Check-in Date *</label>
+                                <input type="date" id="checkInDate" class="form-control" required />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="checkOutDate">Check-out Date *</label>
+                                <input type="date" id="checkOutDate" class="form-control" required />
+                            </div>
+                        </div>
+
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label for="numberOfGuests">Number of Guests *</label>
+                                <input type="number" id="numberOfGuests" class="form-control" min="1" value="1" required />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="status">Status *</label>
+                                <select id="status" class="form-control" required>
+                                    <option value="CONFIRMED">CONFIRMED</option>
+                                    <option value="PENDING">PENDING</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Add Reservation</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h3>Reservation List</h3>
+
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label for="fromDate">From Date</label>
+                            <input type="date" id="fromDate" class="form-control" />
+                        </div>
+                        <div class="form-group">
+                            <label for="toDate">To Date</label>
+                            <input type="date" id="toDate" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label for="searchText">Search (name / passport / email / NIC / status)</label>
+                            <input type="text" id="searchText" class="form-control" placeholder="Type to search..." />
+                        </div>
+                        <div class="form-group" style="display:flex; align-items:flex-end; gap:8px;">
+                            <button id="loadBtn" class="btn btn-secondary" type="button">Load by Date</button>
+                            <button id="searchBtn" class="btn btn-primary" type="button">Search</button>
+                        </div>
+                    </div>
+
+                    <div id="reservationResults" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+    let reservationsRaw = [];
+    const guestCache = new Map();
+
+    function setDefaultDates() {
+        const today = new Date();
+        const monthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+        document.getElementById('fromDate').value = monthAgo.toISOString().split('T')[0];
+        document.getElementById('toDate').value = today.toISOString().split('T')[0];
+        document.getElementById('checkInDate').value = today.toISOString().split('T')[0];
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+        document.getElementById('checkOutDate').value = tomorrow.toISOString().split('T')[0];
+    }
+
+    async function loadGuestsDropdown() {
+        const select = document.getElementById('guestId');
+        try {
+            const res = await API.guests.search('%');
+            const guests = res.data || [];
+            if (!guests.length) {
+                select.innerHTML = '<option value="">No guests found</option>';
+                return;
+            }
+            guests.forEach(g => guestCache.set(g.guestId, g));
+            select.innerHTML = '<option value="">Select Guest</option>' +
+                guests.map(g => `<option value="${g.guestId}">${g.guestName} (${g.guestPassport || "No Passport"})</option>`).join('');
+        } catch {
+            select.innerHTML = '<option value="">Error loading guests</option>';
+        }
+    }
+
+    async function loadRoomsDropdown() {
+        const select = document.getElementById('roomId');
+        try {
+            const res = await API.rooms.list();
+            const rooms = (res.data || []).filter(r => r.roomStatus === 'AVAILABLE');
+            if (!rooms.length) {
+                select.innerHTML = '<option value="">No available rooms</option>';
+                return;
+            }
+            select.innerHTML = '<option value="">Select Room</option>' +
+                rooms.map(r => `<option value="${r.roomId}">Room ${r.roomId} - ${r.roomType} (${r.ratePerNight}/night)</option>`).join('');
+        } catch {
+            select.innerHTML = '<option value="">Error loading rooms</option>';
+        }
+    }
+
+    async function createReservation(e) {
+        e.preventDefault();
+
+        const payload = {
+            guestId: Number(document.getElementById('guestId').value),
+            roomId: Number(document.getElementById('roomId').value),
+            numberOfGuests: Number(document.getElementById('numberOfGuests').value),
+            checkInDate: document.getElementById('checkInDate').value,
+            checkOutDate: document.getElementById('checkOutDate').value,
+            status: document.getElementById('status').value
+        };
+
+        if (!payload.guestId || !payload.roomId || !payload.checkInDate || !payload.checkOutDate) {
+            alert('Please fill all required fields');
+            return;
+        }
+        if (payload.checkOutDate <= payload.checkInDate) {
+            alert('Check-out date must be after check-in date');
+            return;
+        }
+
+        try {
+            const res = await API.reservations.create(payload);
+            if (res.success) {
+                alert('Reservation added successfully');
+                await loadRoomsDropdown();
+                await loadReservationsByDate();
+            } else {
+                alert(res.message || 'Failed to add reservation');
+            }
+        } catch {
+            alert('Error adding reservation');
+        }
+    }
+
+    async function getGuestById(guestId) {
+        if (guestCache.has(guestId)) return guestCache.get(guestId);
+        try {
+            const res = await API.request(`/api/guests/${guestId}`);
+            const g = res.data || null;
+            if (g) guestCache.set(guestId, g);
+            return g;
+        } catch {
+            return null;
+        }
+    }
+
+    async function loadReservationsByDate() {
+        const from = document.getElementById('fromDate').value;
+        const to = document.getElementById('toDate').value;
+        const container = document.getElementById('reservationResults');
+
+        if (!from || !to) {
+            container.innerHTML = '<p>Please select From and To dates.</p>';
+            return;
+        }
+
+        try {
+            const res = await API.reservations.search(from, to);
+            const list = res.data || [];
+
+            const enriched = await Promise.all(list.map(async r => {
+                const guest = await getGuestById(r.guestId);
+                return { ...r, guest };
+            }));
+
+            reservationsRaw = enriched;
+            renderReservations(enriched);
+        } catch {
+            container.innerHTML = '<p>Error loading reservations.</p>';
+        }
+    }
+
+    function searchableText(r) {
+        return [
+            r.reservationId,
+            r.status,
+            r.roomId,
+            r.guestId,
+            r.guest?.guestName,
+            r.guest?.guestPassport,
+            r.guest?.guestEmail,
+            r.guest?.guestNIC
+        ].join(' ').toLowerCase();
+    }
+
+    function renderReservations(list) {
+        const container = document.getElementById('reservationResults');
+
+        if (!list.length) {
+            container.innerHTML = '<p>No reservations found.</p>';
+            return;
+        }
+
+        container.innerHTML = `
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Reservation ID</th>
+            <th>Guest Name</th>
+            <th>Passport</th>
+            <th>Room ID</th>
+            <th>Check-in</th>
+            <th>Check-out</th>
+            <th>Guests</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${list.map(r => `
+            <tr>
+              <td>${r.reservationId}</td>
+              <td>${r.guest?.guestName || '-'}</td>
+              <td>${r.guest?.guestPassport || '-'}</td>
+              <td>${r.roomId}</td>
+              <td>${r.checkInDate || '-'}</td>
+              <td>${r.checkOutDate || '-'}</td>
+              <td>${r.numberOfGuests || '-'}</td>
+              <td>${r.status || '-'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+    }
+
+    function runSearch() {
+        const term = document.getElementById('searchText').value.trim().toLowerCase();
+        if (!term) {
+            renderReservations(reservationsRaw);
+            return;
+        }
+        const filtered = reservationsRaw.filter(r => searchableText(r).includes(term));
+        renderReservations(filtered);
+    }
+
+    document.getElementById('reservationForm').addEventListener('submit', createReservation);
+    document.getElementById('loadBtn').addEventListener('click', loadReservationsByDate);
+    document.getElementById('searchBtn').addEventListener('click', runSearch);
+    document.getElementById('searchText').addEventListener('input', runSearch);
+
+    setDefaultDates();
+    loadGuestsDropdown();
+    loadRoomsDropdown();
+    loadReservationsByDate();
+</script>
+</body>
+</html>

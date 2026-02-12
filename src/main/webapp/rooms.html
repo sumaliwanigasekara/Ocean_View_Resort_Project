@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rooms - Ocean View Resort</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <h1>🌊 Ocean View</h1>
+      <span>Resort Management</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+      <a href="guests.html" class="nav-link">👥 Guests</a>
+      <a href="rooms.html" class="nav-link active">🛏️ Rooms</a>
+      <a href="reservations.html" class="nav-link">📅 Reservations</a>
+      <a href="billing.html" class="nav-link">💳 Billing</a>
+      <a href="reports.html" class="nav-link">📈 Reports</a>
+      <a href="help.html" class="nav-link">📈 Help</a>
+      <button id="logoutBtn" class="btn btn-logout">Logout</button>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">Rooms</h1>
+        <p class="page-subtitle">Add and view rooms</p>
+      </div>
+    </header>
+
+    <div class="page-body">
+      <div class="card">
+        <div class="card-body">
+          <form id="roomForm">
+            <div class="form-group">
+              <label>Room Type</label>
+
+                <select id="roomType" class="form-control">
+                  <option value="SINGLE">SINGLE</option>
+                  <option value="DOUBLE">DOUBLE</option>
+                  <option value="TWIN">TWIN</option>
+                  <option value="SUITE">SUITE</option>
+                  <option value="DELUXE">DELUXE</option>
+                  <option value="PRESIDENTIAL">PRESIDENTIAL</option>
+                </select>
+            </div>
+            <div class="form-group">
+              <label>Rate per Night</label>
+              <input type="number" id="ratePerNight" class="form-control" step="0.01" required>
+            </div>
+            <div class="form-group">
+              <label>Max Occupancy</label>
+              <input type="number" id="maxOccupancy" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label>Status</label>
+              <select id="roomStatus" class="form-control">
+                <option>AVAILABLE</option>
+                <option>MAINTENANCE</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Room</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="card mt-3">
+        <div class="card-body">
+          <h3>Rooms List</h3>
+          <div id="roomTypeCards" class="mt-3"></div>
+          <div id="roomResults" class="mt-3"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  let allRooms = [];
+
+  async function fetchRooms() {
+    const response = await API.rooms.list();
+    if (!response || response.success === false) {
+      throw new Error(response?.message || 'Failed to load rooms');
+    }
+    allRooms = response.data || [];
+    return allRooms;
+  }
+
+  function applyFromExistingRoom(type) {
+    const matches = allRooms.filter((r) => r.roomType === type);
+    if (!matches.length) return;
+
+    const template = matches.find((r) => r.roomStatus === 'AVAILABLE') || matches[0];
+    document.getElementById('ratePerNight').value = template.ratePerNight ?? '';
+    document.getElementById('maxOccupancy').value = template.maxOccupancy ?? template.max_occupancy ?? 2;
+    document.getElementById('roomStatus').value = template.roomStatus ?? 'AVAILABLE';
+  }
+
+  function renderRoomTable(list) {
+    const container = document.getElementById('roomResults');
+    if (!list.length) {
+      container.innerHTML = '<p>No rooms found.</p>';
+      return;
+    }
+
+    container.innerHTML = `
+      <table class="table">
+        <thead>
+          <tr><th>ID</th><th>Type</th><th>Rate</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          ${list.map((r) => `
+            <tr>
+              <td>${r.roomId}</td>
+              <td>${r.roomType}</td>
+              <td>${r.ratePerNight}</td>
+              <td>${r.roomStatus}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function loadRoomTypeCards() {
+    const container = document.getElementById('roomTypeCards');
+    if (!allRooms.length) {
+      container.innerHTML = '<p>No rooms found.</p>';
+      return;
+    }
+
+    const byType = new Map();
+    allRooms.forEach((r) => {
+      const type = r.roomType;
+      if (!byType.has(type)) {
+        byType.set(type, {
+          roomType: type,
+          ratePerNight: r.ratePerNight,
+          maxOccupancy: r.maxOccupancy ?? r.max_occupancy ?? '-',
+          total: 0,
+          available: 0
+        });
+      }
+      const group = byType.get(type);
+      group.total += 1;
+      if ((r.roomStatus || '').toUpperCase() === 'AVAILABLE') {
+        group.available += 1;
+      }
+    });
+
+    container.innerHTML = [...byType.values()].map((g) => `
+      <div class="card">
+        <div class="card-body">
+          <h3 style="margin-top:0;">${g.roomType}</h3>
+          <p><strong>Rate/Night:</strong> ${g.ratePerNight}</p>
+          <p><strong>Max Occupancy:</strong> ${g.maxOccupancy}</p>
+          <p><strong>Available:</strong> ${g.available} / ${g.total}</p>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function refreshRoomViews() {
+    await fetchRooms();
+    applyFromExistingRoom(document.getElementById('roomType').value);
+    loadRoomTypeCards();
+    renderRoomTable(allRooms);
+  }
+
+  document.getElementById('roomType').addEventListener('change', (e) => {
+    applyFromExistingRoom(e.target.value);
+  });
+
+  document.getElementById('roomForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const payload = {
+      roomType: document.getElementById('roomType').value,
+      ratePerNight: Number(document.getElementById('ratePerNight').value),
+      maxOccupancy: Number(document.getElementById('maxOccupancy').value),
+      roomStatus: document.getElementById('roomStatus').value
+    };
+
+    try {
+      const response = await API.rooms.create(payload);
+      alert(response.message || 'Room saved');
+      await refreshRoomViews();
+    } catch {
+      alert('Error saving room');
+    }
+  });
+
+  (async () => {
+    try {
+      await refreshRoomViews();
+    } catch (error) {
+      const message = error?.message || 'Error loading rooms.';
+      document.getElementById('roomTypeCards').innerHTML = `<p>${message}</p>`;
+      document.getElementById('roomResults').innerHTML = `<p>${message}</p>`;
+    }
+  })();
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    const ctx = window.location.pathname.split('/')[1];
+    const base = ctx && !ctx.includes('.') ? `/${ctx}` : '';
+
+    try {
+      await fetch(`${base}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } finally {
+      window.location.href = 'index.html';
+    }
+  });
+</script>
+</body>
+</html>

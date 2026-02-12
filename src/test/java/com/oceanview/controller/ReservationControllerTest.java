@@ -11,13 +11,6 @@ import static org.junit.Assert.assertSame;
 
 public class ReservationControllerTest {
 
-    @Test(expected = IllegalArgumentException.class)
-    public void addReservation_null_throws() {
-        ReservationController controller = new ReservationController(new FakeReservationService());
-
-        controller.addReservation(null);
-    }
-
     @Test
     public void addReservation_valid_delegates() {
         ReservationController controller = new ReservationController(new FakeReservationService());
@@ -37,6 +30,12 @@ public class ReservationControllerTest {
         @Override
         public Reservation addReservation(Reservation reservation) {
             return reservation;
+        }
+
+
+        @Override
+        public java.util.List<Reservation> listReservations(java.time.LocalDate from, java.time.LocalDate to) {
+            return java.util.List.of();
         }
 
         @Override

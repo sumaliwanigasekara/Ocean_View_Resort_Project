@@ -14,4 +14,16 @@ public interface BillingService {
     default Bill findBillByReservation(long reservationId) {
         return null;
     }
+
+    default java.util.List<Bill> listBills() {
+        return java.util.List.of();
+    }
+
+    default java.util.List<Bill> listBillsByStatus(Bill.BillStatus status) {
+        return java.util.List.of();
+    }
+
+    default boolean markBillAsPaid(long billId, String paymentMethod) {
+        return false;
+    }
 }

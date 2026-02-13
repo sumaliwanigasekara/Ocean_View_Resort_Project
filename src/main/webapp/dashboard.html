@@ -36,39 +36,19 @@
 
         <div class="page-body">
             <div class="stats-grid" id="statsContainer">
-
-                <div class="dashboard-summary-grid">
-                    <section class="summary-card">
-                        <div class="summary-card-header">
-                            <h3>Today's Check-ins</h3>
-                            <a href="reservations.html" class="summary-link">View All</a>
-                        </div>
-                        <div class="summary-card-body">
-                            <p class="empty-text">No check-ins scheduled for today</p>
-                        </div>
-                    </section>
-
-                    <section class="summary-card">
-                        <div class="summary-card-header">
-                            <h3>Today's Check-outs</h3>
-                            <a href="reservations.html" class="summary-link">View All</a>
-                        </div>
-                        <div class="summary-card-body">
-                            <p class="empty-text">No check-outs scheduled for today</p>
-                        </div>
-                    </section>
-                </div>
-
-                <section class="summary-card summary-card-full">
-                    <div class="summary-card-header">
-                        <h3>Recent Reservations</h3>
-                        <a href="reservations.html" class="summary-link">View All</a>
-                    </div>
-                    <div class="summary-card-body">
-                        <p class="empty-text">No reservations found</p>
-                    </div>
-                </section>
                 <div class="loading"><div class="spinner"></div></div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3 class="card-title">Recent Reservations</h3>
+                    <a href="reservations.html" class="btn btn-sm btn-outline">View All</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-container" id="recentReservationsContainer">
+                        <div class="loading"><div class="spinner"></div></div>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
@@ -78,9 +58,18 @@
 <script>
     document.getElementById('currentDate').textContent = new Date().toLocaleDateString();
 
+    function formatDate(dateValue) {
+        if (!dateValue) return '-';
+        const dt = new Date(dateValue);
+        return Number.isNaN(dt.getTime()) ? dateValue : dt.toLocaleDateString();
+    }
+
     async function loadStats() {
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
         try {
-            const response = await API.reports.getDashboard();
+            const response = await API.reports.get('dashboard', firstDay, lastDay);
             if (response.success) {
                 const data = response.data;
                 document.getElementById('statsContainer').innerHTML = `
@@ -101,13 +90,72 @@
             <div class="stat-label">Monthly Revenue</div>
           </div>
         `;
+            } else {
+                document.getElementById('statsContainer').innerHTML = '<p>Error loading stats</p>';
             }
         } catch (e) {
             document.getElementById('statsContainer').innerHTML = '<p>Error loading stats</p>';
         }
     }
 
+    async function loadRecentReservations() {
+        const container = document.getElementById('recentReservationsContainer');
+        const now = new Date();
+        const from = new Date(now);
+        from.setFullYear(now.getFullYear() - 1);
+        const to = new Date(now);
+        to.setFullYear(now.getFullYear() + 1);
+
+        try {
+            const response = await API.reservations.search(
+                from.toISOString().split('T')[0],
+                to.toISOString().split('T')[0]
+            );
+
+            if (!response.success) {
+                container.innerHTML = '<p class="text-muted">Unable to load reservations.</p>';
+                return;
+            }
+
+            const list = (response.data || []).slice().sort((a, b) => (b.reservationId || 0) - (a.reservationId || 0));
+            if (!list.length) {
+                container.innerHTML = '<p class="text-muted">No reservations found.</p>';
+                return;
+            }
+
+            container.innerHTML = `
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Guest ID</th>
+                    <th>Room ID</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${list.map((r) => `
+                    <tr>
+                      <td>${r.reservationId ?? '-'}</td>
+                      <td>${r.guestId ?? '-'}</td>
+                      <td>${r.roomId ?? '-'}</td>
+                      <td>${formatDate(r.checkInDate)}</td>
+                      <td>${formatDate(r.checkOutDate)}</td>
+                      <td>${r.status ?? '-'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            `;
+        } catch (e) {
+            container.innerHTML = '<p class="text-muted">Error loading reservations.</p>';
+        }
+    }
+
     loadStats();
+    loadRecentReservations();
 
         document.getElementById('logoutBtn').addEventListener('click', async () => {
         const ctx = window.location.pathname.split('/')[1];

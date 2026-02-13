@@ -1,6 +1,6 @@
-
 package com.oceanview.service;
 
+import com.oceanview.dao.impl.BillDAOImpl;
 import com.oceanview.model.Bill;
 import com.oceanview.service.impl.BillingServiceImpl;
 import org.junit.Test;
@@ -13,17 +13,19 @@ public class BillingServiceImplTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void calculateTotal_missingCharges_throws() {
-        BillingServiceImpl service = new BillingServiceImpl();
+        BillingServiceImpl service = new BillingServiceImpl(new BillDAOImpl());
+
         Bill bill = new Bill();
         bill.setRoomCharges(new BigDecimal("100.00"));
-        // serviceCharges missing
+        // Missing serviceCharges, taxAmount, discountAmount
 
         service.calculateTotal(bill);
     }
 
     @Test
     public void calculateTotal_validCharges_returnsTotal() {
-        BillingServiceImpl service = new BillingServiceImpl();
+        BillingServiceImpl service = new BillingServiceImpl(new BillDAOImpl());
+
         Bill bill = new Bill();
         bill.setRoomCharges(new BigDecimal("100.00"));
         bill.setServiceCharges(new BigDecimal("20.00"));

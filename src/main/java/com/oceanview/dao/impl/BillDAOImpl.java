@@ -154,6 +154,38 @@ public class BillDAOImpl implements BillDAO {
         }
     }
 
+    @Override
+    public List<Bill> findAll() {
+        String sql = "SELECT billId, reservationId, room_charges, service_charges, tax_amount, discount_amount, total_amount, status, payment_method, paid_at, created_at " +
+                "FROM bills ORDER BY created_at DESC";
+        List<Bill> bills = new ArrayList<>();
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                bills.add(mapBill(rs));
+            }
+            return bills;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    @Override
+    public boolean markAsPaid(long billId, String paymentMethod) {
+        String sql = "UPDATE bills SET status = 'PAID', payment_method = ?, paid_at = NOW(), updated_at = NOW() WHERE billId = ?";
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, paymentMethod);
+            ps.setLong(2, billId);
+            return ps.executeUpdate() > 0;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
     private Bill mapBill(ResultSet rs) throws Exception {
         Bill bill = new Bill();
         bill.setBillId(rs.getLong("billId"));
@@ -164,6 +196,27 @@ public class BillDAOImpl implements BillDAO {
         bill.setDiscountAmount(rs.getBigDecimal("discount_amount"));
         bill.setTotalAmount(rs.getBigDecimal("total_amount"));
         bill.setStatus(Bill.BillStatus.valueOf(rs.getString("status")));
+        try {
+            bill.setPaymentMethod(rs.getString("payment_method"));
+        } catch (Exception ignored) {
+            // Optional column in some queries.
+        }
+        try {
+            java.sql.Timestamp paidAt = rs.getTimestamp("paid_at");
+            if (paidAt != null) {
+                bill.setPaidAt(paidAt.toLocalDateTime());
+            }
+        } catch (Exception ignored) {
+            // Optional column in some queries.
+        }
+        try {
+            java.sql.Timestamp createdAt = rs.getTimestamp("created_at");
+            if (createdAt != null) {
+                bill.setCreated_at(createdAt.toLocalDateTime());
+            }
+        } catch (Exception ignored) {
+            // Optional column in some queries.
+        }
         return bill;
     }
 }

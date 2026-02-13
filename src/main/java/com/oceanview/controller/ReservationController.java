@@ -1,6 +1,7 @@
 package com.oceanview.controller;
 
 import com.oceanview.dao.impl.ReservationDAOImpl;
+import com.oceanview.dao.impl.RoomDAOImpl;
 import com.oceanview.model.Reservation;
 import com.oceanview.service.ReservationService;
 import com.oceanview.service.impl.ReservationServiceImpl;
@@ -16,12 +17,12 @@ import java.util.List;
 public class ReservationController extends BaseController {
     private final ReservationService reservationService;
 
+    // Only ONE default constructor
     public ReservationController() {
-        this.reservationService = new ReservationServiceImpl(new ReservationDAOImpl());
+        this.reservationService = new ReservationServiceImpl(new ReservationDAOImpl(), new RoomDAOImpl());
     }
 
-    // For tests
-
+    // Keep test constructor
     public ReservationController(ReservationService reservationService) {
         this.reservationService = reservationService;
     }
@@ -43,12 +44,14 @@ public class ReservationController extends BaseController {
                 writeJson(response, okResponse("ok", reservation), HttpServletResponse.SC_OK);
                 return;
             }
+
             String from = request.getParameter("from");
             String to = request.getParameter("to");
             if (from == null || to == null) {
                 writeJson(response, okResponse("ok", List.of()), HttpServletResponse.SC_OK);
                 return;
             }
+
             List<Reservation> reservations = reservationService.listReservations(
                     LocalDate.parse(from), LocalDate.parse(to));
             writeJson(response, okResponse("ok", reservations), HttpServletResponse.SC_OK);

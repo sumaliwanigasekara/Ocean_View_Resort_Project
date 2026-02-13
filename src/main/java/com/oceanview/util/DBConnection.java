@@ -9,15 +9,18 @@ import java.util.Properties;
 
 public final class DBConnection {
     private static final String PROPERTIES_FILE = "db.properties";
-    private static final Properties PROPERTIES = new Properties();
+    private static final DBConnection INSTANCE = new DBConnection();
 
-    static {
+    private final Properties properties = new Properties();
+
+    private DBConnection() {
         try (InputStream input = DBConnection.class.getClassLoader().getResourceAsStream(PROPERTIES_FILE)) {
             if (input == null) {
                 throw new IllegalStateException("Missing " + PROPERTIES_FILE + " in classpath.");
             }
-            PROPERTIES.load(input);
-            String driver = PROPERTIES.getProperty("db.driver");
+            properties.load(input);
+
+            String driver = properties.getProperty("db.driver");
             if (driver != null && !driver.isBlank()) {
                 Class.forName(driver);
             }
@@ -26,21 +29,26 @@ public final class DBConnection {
         }
     }
 
-    private DBConnection() {
+    public static DBConnection getInstance() {
+        return INSTANCE;
     }
 
-    public static Connection getConnection() throws SQLException {
+    // Instance method
+    public Connection openConnection() throws SQLException {
         return DriverManager.getConnection(
-                PROPERTIES.getProperty("db.url"),
-                PROPERTIES.getProperty("db.username"),
-                PROPERTIES.getProperty("db.password")
+                properties.getProperty("db.url"),
+                properties.getProperty("db.username"),
+                properties.getProperty("db.password")
         );
     }
 
+    // Compatibility method so existing DAO code doesn't break
+    public static Connection getConnection() throws SQLException {
+        return getInstance().openConnection();
+    }
+
     public static void closeQuietly(AutoCloseable closeable) {
-        if (closeable == null) {
-            return;
-        }
+        if (closeable == null) return;
         try {
             closeable.close();
         } catch (Exception ignored) {

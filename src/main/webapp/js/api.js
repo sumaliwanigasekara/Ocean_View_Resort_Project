@@ -36,6 +36,18 @@ const API = {
                 method: "POST",
                 body: JSON.stringify({ reservationId, serviceCharges, discountAmount })
             });
+        },
+        list(status = "") {
+            return API.request(status ? `/api/bills?status=${encodeURIComponent(status)}` : "/api/bills");
+        },
+        getById(billId) {
+            return API.request(`/api/bills/${billId}`);
+        },
+        markAsPaid(billId, paymentMethod) {
+            return API.request(`/api/bills/${billId}/pay`, {
+                method: "POST",
+                body: JSON.stringify({ paymentMethod })
+            });
         }
     },
 
@@ -45,6 +57,9 @@ const API = {
                 method: "POST",
                 body: JSON.stringify(payload)
             });
+        },
+        getById(id) {
+            return API.request(`/api/reservations/${id}`);
         },
         search(from, to) {
             return API.request(`/api/reservations?from=${from}&to=${to}`);
@@ -60,6 +75,9 @@ const API = {
         },
         search(term) {
             return API.request(`/api/guests?q=${encodeURIComponent(term)}`);
+        },
+        getById(id) {
+            return API.request(`/api/guests/${id}`);
         }
     },
 

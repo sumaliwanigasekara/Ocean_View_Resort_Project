@@ -18,4 +18,8 @@ public interface BillDAO {
     java.util.List<Bill> findBetweenDates(java.time.LocalDate start, java.time.LocalDate end);
 
     java.util.List<Bill> findByStatus(Bill.BillStatus status);
+
+    java.util.List<Bill> findAll();
+
+    boolean markAsPaid(long billId, String paymentMethod);
 }

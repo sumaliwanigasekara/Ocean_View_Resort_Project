@@ -38,6 +38,91 @@ a { text-decoration: none; color: inherit; }
 .page-header { display: flex; justify-content: space-between; align-items: center; }
 .page-title { margin: 0; }
 .page-subtitle { color: var(--muted); margin-top: 6px; }
+.page-body { margin-top: 18px; }
+
+/* Dashboard */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(170px, 1fr));
+    gap: 14px;
+    margin-bottom: 8px;
+}
+
+.stat-card {
+    background: linear-gradient(145deg, #ffffff, #f6fbfc);
+    border: 1px solid #dbe8ec;
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 8px 20px rgba(2, 12, 27, 0.06);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(2, 12, 27, 0.1);
+}
+
+.stat-value {
+    font-size: 34px;
+    line-height: 1;
+    font-weight: 800;
+    color: #0e7490;
+    letter-spacing: -0.5px;
+}
+
+.stat-label {
+    margin-top: 8px;
+    color: #51616b;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.stat-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.stat-icon {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #e0f2f1;
+    font-size: 18px;
+}
+
+.stat-chip {
+    font-size: 11px;
+    font-weight: 700;
+    color: #0f766e;
+    background: #e6fffa;
+    border: 1px solid #99f6e4;
+    border-radius: 999px;
+    padding: 4px 8px;
+    letter-spacing: 0.3px;
+}
+
+.stat-card-wide {
+    grid-column: span 2;
+}
+
+.card {
+    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+}
+
+.table th {
+    color: #334155;
+    font-weight: 700;
+}
+
+.table tbody tr:hover {
+    background: #f8fafc;
+}
 
 /* Cards */
 .card {
@@ -398,12 +483,31 @@ a { text-decoration: none; color: inherit; }
 
 @media (max-width: 1000px) {
     .reports-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
+    .stat-card-wide { grid-column: span 2; }
 }
 
 @media (max-width: 900px) {
     .dashboard-summary-grid {
         grid-template-columns: 1fr;
     }
+    .main-content { padding: 16px; }
+}
+
+@media (max-width: 640px) {
+    .app-layout {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        padding: 14px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    .stat-card-wide { grid-column: span 1; }
 }
 
 /* Layout utilities */

@@ -92,13 +92,38 @@
     const ctx = window.location.pathname.split('/')[1];
     const basePath = ctx && !ctx.includes('.') ? `/${ctx}` : '';
 
-    function isAuthenticated() {
-        return document.cookie.includes("ovr_role=");
+    function hasRoleCookie() {
+        return document.cookie.split(';').some(c => c.trim().startsWith('ovr_role='));
     }
 
-    if (isAuthenticated()) {
-        window.location.href = 'dashboard.html';
+    function clearRoleCookie() {
+        document.cookie = 'ovr_role=; Max-Age=0; Path=/';
+        if (basePath) {
+            document.cookie = `ovr_role=; Max-Age=0; Path=${basePath}`;
+        }
     }
+
+    async function verifySessionAndRedirect() {
+        if (!hasRoleCookie()) {
+            return;
+        }
+        try {
+            const res = await fetch(`${basePath}/api/auth/me`, {
+                method: 'GET',
+                credentials: 'include'
+            });
+            const body = await res.json();
+            if (res.ok && body.success) {
+                window.location.href = 'dashboard.html';
+                return;
+            }
+            clearRoleCookie();
+        } catch (error) {
+            clearRoleCookie();
+        }
+    }
+
+    verifySessionAndRedirect();
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();

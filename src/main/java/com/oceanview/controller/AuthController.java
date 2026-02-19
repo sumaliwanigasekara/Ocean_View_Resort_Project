@@ -8,11 +8,12 @@ import com.oceanview.service.impl.AuthServiceImpl;
 import com.oceanview.util.ValidationUtil;
 
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @WebServlet(name = "AuthController", urlPatterns = "/api/auth/*")
 public class AuthController extends BaseController {
@@ -73,15 +74,18 @@ public class AuthController extends BaseController {
 
             LoginResponse loginResponse = authService.login(loginRequest);
             if (loginResponse.isSuccess()) {
+                HttpSession existingSession = request.getSession(false);
+                if (existingSession != null) {
+                    existingSession.invalidate();
+                }
+
                 HttpSession session = request.getSession(true);
+                session.setMaxInactiveInterval(30 * 60);
                 session.setAttribute("userId", loginResponse.getUserId());
                 session.setAttribute("userName", loginResponse.getUserName());
                 session.setAttribute("userRole", loginResponse.getRole());
 
-                Cookie roleCookie = new Cookie("ovr_role", loginResponse.getRole());
-                roleCookie.setHttpOnly(false);
-                roleCookie.setPath("/");
-                response.addCookie(roleCookie);
+                setRoleCookie(response, request, loginResponse.getRole(), -1);
             }
             writeJson(response, loginResponse, HttpServletResponse.SC_OK);
             return;
@@ -92,15 +96,35 @@ public class AuthController extends BaseController {
             if (session != null) {
                 session.invalidate();
             }
-            Cookie roleCookie = new Cookie("ovr_role", "");
-            roleCookie.setMaxAge(0);
-            roleCookie.setPath("/");
-            response.addCookie(roleCookie);
+            setRoleCookie(response, request, "", 0);
             writeJson(response, new LoginResponse(true, "Logged out", null, null, null), HttpServletResponse.SC_OK);
             return;
         }
         writeError(response, "Not found.", HttpServletResponse.SC_NOT_FOUND);
     }
 
+    private void setRoleCookie(HttpServletResponse response, HttpServletRequest request, String value, int maxAgeSeconds) {
+        String encodedValue = URLEncoder.encode(value, StandardCharsets.UTF_8);
+        String path = request.getContextPath() == null || request.getContextPath().isEmpty()
+                ? "/"
+                : request.getContextPath();
+
+        StringBuilder cookie = new StringBuilder("ovr_role=")
+                .append(encodedValue)
+                .append("; Path=").append(path)
+                .append("; SameSite=Lax");
+
+        // Only send Max-Age when explicitly deleting/persisting.
+        // For login we want a normal session cookie, so we omit Max-Age.
+        if (maxAgeSeconds >= 0) {
+            cookie.append("; Max-Age=").append(maxAgeSeconds);
+        }
+
+        if (request.isSecure()) {
+            cookie.append("; Secure");
+        }
+
+        response.addHeader("Set-Cookie", cookie.toString());
+    }
 
 }

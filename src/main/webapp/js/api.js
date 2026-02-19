@@ -1,5 +1,7 @@
 const first = window.location.pathname.split('/')[1];
 const autoBase = first && !first.includes('.') ? `/${first}` : '';
+let authMeCache = null;
+let authMePromise = null;
 
 
 const API = {
@@ -26,6 +28,11 @@ const API = {
             return API.request("/api/auth/login", {
                 method: "POST",
                 body: JSON.stringify({ email, password })
+            });
+        },
+        me() {
+            return API.request("/api/auth/me", {
+                method: "GET"
             });
         }
     },
@@ -104,5 +111,57 @@ const API = {
 
     isAuthenticated() {
         return document.cookie.includes("ovr_role");
+    },
+
+    async getCurrentUser(forceRefresh = false) {
+        if (forceRefresh) {
+            authMeCache = null;
+            authMePromise = null;
+        }
+
+        if (authMeCache) {
+            return authMeCache;
+        }
+
+        if (!authMePromise) {
+            authMePromise = API.auth.me()
+                .then((res) => (res && res.success ? res : null))
+                .catch(() => null);
+        }
+
+        authMeCache = await authMePromise;
+        return authMeCache;
+    },
+
+    applyRoleVisibility(role) {
+        const isManager = (role || "").toUpperCase() === "MANAGER";
+        document.querySelectorAll('[data-role="MANAGER"]').forEach((el) => {
+            el.classList.toggle("hidden", !isManager);
+        });
+    },
+
+    async initAccessControl() {
+        const user = await API.getCurrentUser();
+        if (!user) {
+            window.location.href = "index.html";
+            return;
+        }
+
+        const role = (user.role || "").toUpperCase();
+        API.applyRoleVisibility(role);
+
+        const requiredRole = (document.body?.dataset?.requiredRole || "").toUpperCase();
+        if (requiredRole && role !== requiredRole) {
+            window.location.href = "dashboard.html";
+            return;
+        }
+
+        window.dispatchEvent(new CustomEvent("ovr:role-ready", {
+            detail: { role, user }
+        }));
     }
 };
+
+document.addEventListener("DOMContentLoaded", () => {
+    API.initAccessControl();
+});

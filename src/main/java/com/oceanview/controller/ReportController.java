@@ -28,6 +28,10 @@ public class ReportController extends BaseController {
             return;
         }
 
+        if (!"dashboard".equalsIgnoreCase(type) && !requireManagerRole(request, response)) {
+            return;
+        }
+
         try {
             LocalDate start = LocalDate.parse(from);
             LocalDate end = LocalDate.parse(to);

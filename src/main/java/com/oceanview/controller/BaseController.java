@@ -6,6 +6,7 @@ import com.oceanview.util.JsonUtil;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -46,5 +47,23 @@ public abstract class BaseController extends HttpServlet {
         payload.put("message", message);
         payload.put("data", data);
         return payload;
+    }
+
+    protected String getSessionRole(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return null;
+        }
+        Object role = session.getAttribute("userRole");
+        return role == null ? null : role.toString();
+    }
+
+    protected boolean requireManagerRole(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String role = getSessionRole(request);
+        if (role != null && "MANAGER".equalsIgnoreCase(role)) {
+            return true;
+        }
+        writeError(response, "Access denied. Manager role required.", HttpServletResponse.SC_FORBIDDEN);
+        return false;
     }
 }

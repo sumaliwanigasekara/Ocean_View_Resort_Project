@@ -28,6 +28,10 @@ public class RoomController extends BaseController {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        if (!requireManagerRole(request, response)) {
+            return;
+        }
+
         String path = request.getPathInfo();
         try {
             if (path != null && path.endsWith("/status")) {

@@ -6,7 +6,7 @@
     <title>Reports - Ocean View Resort</title>
     <link rel="stylesheet" href="css/styles.css" />
 </head>
-<body>
+<body data-required-role="MANAGER">
 <div class="app-layout">
     <aside class="sidebar">
         <div class="sidebar-brand">
@@ -19,7 +19,7 @@
             <a href="guests.html" class="nav-link">👥 Guests</a>
             <a href="rooms.html" class="nav-link">🛏️ Rooms</a>
             <a href="billing.html" class="nav-link">💳 Billing</a>
-            <a href="reports.html" class="nav-link active">📈 Reports</a>
+            <a href="reports.html" class="nav-link active" data-role="MANAGER">📈 Reports</a>
             <a href="help.html" class="nav-link">❓ Help</a>
             <button id="logoutBtn" class="btn btn-logout">Logout</button>
         </nav>
@@ -183,7 +183,12 @@
     }
 
     document.getElementById('generateBtn').addEventListener('click', loadReports);
-    loadReports();
+    window.addEventListener('ovr:role-ready', (event) => {
+        const role = (event?.detail?.role || '').toUpperCase();
+        if (role === 'MANAGER') {
+            loadReports();
+        }
+    });
     document.getElementById('logoutBtn').addEventListener('click', async () => {
         const ctx = window.location.pathname.split('/')[1];
         const base = ctx && !ctx.includes('.') ? `/${ctx}` : '';

@@ -6,6 +6,7 @@ import com.oceanview.dao.RoomDAO;
 import com.oceanview.dao.impl.BillDAOImpl;
 import com.oceanview.dao.impl.ReservationDAOImpl;
 import com.oceanview.dao.impl.RoomDAOImpl;
+import com.oceanview.model.Bill;
 import com.oceanview.model.Bill.BillStatus;
 import com.oceanview.model.Reservation.ReservationStatus;
 import com.oceanview.model.Room.RoomStatus;
@@ -112,13 +113,13 @@ public class ReportServiceImpl implements ReportService {
 
         BigDecimal pendingRevenue = bills.stream()
                 .filter(b -> b.getStatus() == BillStatus.PENDING)
-                .map(b -> b.getTotalAmount())
+                .map(Bill::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         report.put("pendingRevenue", pendingRevenue);
 
         BigDecimal roomCharges = bills.stream()
                 .filter(b -> b.getStatus() == BillStatus.PAID)
-                .map(b -> b.getRoomCharges())
+                .map(Bill::getRoomCharges)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         report.put("roomCharges", roomCharges);
 
@@ -130,7 +131,7 @@ public class ReportServiceImpl implements ReportService {
 
         BigDecimal taxCollected = bills.stream()
                 .filter(b -> b.getStatus() == BillStatus.PAID)
-                .map(b -> b.getTaxAmount())
+                .map(Bill::getTaxAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         report.put("taxCollected", taxCollected);
 

@@ -2,9 +2,6 @@ package com.oceanview.dao;
 
 import com.oceanview.model.Reservation;
 
-import java.time.LocalDate;
-import java.util.List;
-
 public interface ReservationDAO {
     Reservation save(Reservation reservation);
 

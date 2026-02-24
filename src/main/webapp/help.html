@@ -59,7 +59,11 @@
     </main>
 </div>
 <script src="js/api.js"></script>
+<script src="js/auth-guard.js"></script>
 <script>
+    (async () => {
+    if (window.requireAuth && !(await window.requireAuth())) return;
+
     document.getElementById('logoutBtn').addEventListener('click', async () => {
         const ctx = window.location.pathname.split('/')[1];
         const base = ctx && !ctx.includes('.') ? `/${ctx}` : '';
@@ -73,6 +77,7 @@
             window.location.href = 'index.html';
         }
     });
+    })();
 </script>
 </body>
 </html>

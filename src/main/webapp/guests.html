@@ -78,8 +78,12 @@
     </main>
 </div>
 
+<script src="js/auth-guard.js"></script>
 <script src="js/api.js"></script>
 <script>
+    (async () => {
+    if (window.requireAuth && !(await window.requireAuth())) return;
+
     document.getElementById('guestForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -94,7 +98,13 @@
 
         try {
             const response = await API.guests.create(payload);
-            alert(response.message || 'Guest saved');
+            if (response && response.success) {
+                alert(response.message || 'Guest saved');
+                document.getElementById('guestForm').reset();
+                document.getElementById('guestName').focus();
+                return;
+            }
+            alert(response?.message || 'Failed to save guest');
         } catch {
             alert('Error saving guest');
         }
@@ -145,6 +155,7 @@
         }
     });
 
+    })();
 </script>
 </body>
 </html>

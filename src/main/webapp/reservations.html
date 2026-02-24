@@ -118,8 +118,12 @@
     </main>
 </div>
 
+<script src="js/auth-guard.js"></script>
 <script src="js/api.js"></script>
 <script>
+    (async () => {
+    if (window.requireAuth && !(await window.requireAuth())) return;
+
     let reservationsRaw = [];
     const guestCache = new Map();
 
@@ -312,6 +316,7 @@
     loadGuestsDropdown();
     loadRoomsDropdown();
     loadReservationsByDate();
+    })();
 </script>
 </body>
 </html>

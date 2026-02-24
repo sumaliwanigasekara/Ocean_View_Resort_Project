@@ -174,15 +174,49 @@ public class BillDAOImpl implements BillDAO {
 
     @Override
     public boolean markAsPaid(long billId, String paymentMethod) {
-        String sql = "UPDATE bills SET status = 'PAID', payment_method = ?, paid_at = NOW(), updated_at = NOW() WHERE billId = ?";
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        String billSql = "UPDATE bills SET status = 'PAID', payment_method = ?, paid_at = NOW(), updated_at = NOW() WHERE billId = ?";
+        String reservationSql = "UPDATE reservations SET status = 'CHECKED_OUT', updated_at = NOW() " +
+                "WHERE reservationId = (SELECT reservationId FROM bills WHERE billId = ?) " +
+                "AND status IN ('CONFIRMED', 'CHECKED_IN')";
+        Connection con = null;
+        try {
+            con = DBConnection.getConnection();
+            try (PreparedStatement billPs = con.prepareStatement(billSql);
+                 PreparedStatement reservationPs = con.prepareStatement(reservationSql)) {
 
-            ps.setString(1, paymentMethod);
-            ps.setLong(2, billId);
-            return ps.executeUpdate() > 0;
+                con.setAutoCommit(false);
+
+                billPs.setString(1, paymentMethod);
+                billPs.setLong(2, billId);
+                boolean billUpdated = billPs.executeUpdate() > 0;
+                if (!billUpdated) {
+                    con.rollback();
+                    return false;
+                }
+
+                reservationPs.setLong(1, billId);
+                reservationPs.executeUpdate();
+
+                con.commit();
+                return true;
+            }
         } catch (Exception ex) {
+            if (con != null) {
+                try {
+                    con.rollback();
+                } catch (Exception ignored) {
+                    // Ignore rollback failures while propagating the original exception.
+                }
+            }
             throw new RuntimeException(ex);
+        } finally {
+            if (con != null) {
+                try {
+                    con.close();
+                } catch (Exception ignored) {
+                    // Ignore close failures.
+                }
+            }
         }
     }
 

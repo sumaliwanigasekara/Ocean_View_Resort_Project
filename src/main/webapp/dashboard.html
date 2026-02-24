@@ -54,8 +54,12 @@
     </main>
 </div>
 
+<script src="js/auth-guard.js"></script>
 <script src="js/api.js"></script>
 <script>
+    (async () => {
+    if (window.requireAuth && !(await window.requireAuth())) return;
+
     document.getElementById('currentDate').textContent = new Date().toLocaleDateString();
 
     function formatDate(dateValue) {
@@ -207,6 +211,7 @@
         window.location.href = 'index.html';
     }
     });
+    })();
 </script>
 
 </body>

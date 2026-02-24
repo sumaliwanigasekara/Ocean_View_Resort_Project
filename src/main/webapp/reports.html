@@ -73,8 +73,12 @@
     </main>
 </div>
 
+<script src="js/auth-guard.js"></script>
 <script src="js/api.js"></script>
 <script>
+    (async () => {
+    if (window.requireAuth && !(await window.requireAuth())) return;
+
     const today = new Date();
     const monthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
     document.getElementById('startDate').value = monthAgo.toISOString().split('T')[0];
@@ -202,6 +206,7 @@
             window.location.href = 'index.html';
         }
     });
+    })();
 </script>
 </body>
 </html>

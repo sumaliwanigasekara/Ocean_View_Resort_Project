@@ -25,6 +25,10 @@ CREATE TABLE IF NOT EXISTS users (
 INSERT INTO users (userName, userRole, userEmail, password, userStatus)
 VALUES ('Manager', 'MANAGER', 'manager@oceanview.com', 'secret', 'ACTIVE');
 
+INSERT INTO users (userName, userRole, userEmail, password, userStatus)
+VALUES ('Receptionist', 'RECEPTIONIST', 'reception@oceanview.com', 'recep123', 'ACTIVE');
+
+
 CREATE TABLE IF NOT EXISTS guests (
                         guestId BIGINT AUTO_INCREMENT PRIMARY KEY,
                         guestPassport VARCHAR(50) UNIQUE,

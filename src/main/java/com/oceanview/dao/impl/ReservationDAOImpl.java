@@ -20,6 +20,7 @@ public class ReservationDAOImpl implements ReservationDAO {
     public Reservation findById(Long reservationId) {
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(FIND_BY_ID_SQL)) {
+            syncPastDueCheckouts(con);
 
             ps.setLong(1, reservationId);
             ResultSet rs = ps.executeQuery();
@@ -65,6 +66,7 @@ public class ReservationDAOImpl implements ReservationDAO {
                 "AND NOT (check_out_date <= ? OR check_in_date >= ?)";
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
+            syncPastDueCheckouts(con);
 
             ps.setLong(1, roomId);
             ps.setDate(2, java.sql.Date.valueOf(checkIn));
@@ -86,6 +88,7 @@ public class ReservationDAOImpl implements ReservationDAO {
         List<Reservation> reservations = new ArrayList<>();
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
+            syncPastDueCheckouts(con);
 
             ps.setDate(1, java.sql.Date.valueOf(from));
             ps.setDate(2, java.sql.Date.valueOf(to));
@@ -105,6 +108,7 @@ public class ReservationDAOImpl implements ReservationDAO {
         String sql = "SELECT COUNT(*) FROM reservations";
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
+            syncPastDueCheckouts(con);
 
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
@@ -121,6 +125,7 @@ public class ReservationDAOImpl implements ReservationDAO {
         String sql = "SELECT COUNT(*) FROM reservations WHERE status = ?";
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
+            syncPastDueCheckouts(con);
 
             ps.setString(1, status.name());
             ResultSet rs = ps.executeQuery();
@@ -140,6 +145,7 @@ public class ReservationDAOImpl implements ReservationDAO {
         List<Reservation> reservations = new ArrayList<>();
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
+            syncPastDueCheckouts(con);
 
             ps.setDate(1, java.sql.Date.valueOf(start));
             ps.setDate(2, java.sql.Date.valueOf(end));
@@ -160,6 +166,7 @@ public class ReservationDAOImpl implements ReservationDAO {
         List<Reservation> reservations = new ArrayList<>();
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
+            syncPastDueCheckouts(con);
 
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -178,6 +185,7 @@ public class ReservationDAOImpl implements ReservationDAO {
         List<Reservation> reservations = new ArrayList<>();
         try (Connection con = DBConnection.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
+            syncPastDueCheckouts(con);
 
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
@@ -200,5 +208,14 @@ public class ReservationDAOImpl implements ReservationDAO {
         reservation.setStatus(Reservation.ReservationStatus.valueOf(rs.getString("status")));
         reservation.setTotalAmount(rs.getBigDecimal("total_amount"));
         return reservation;
+    }
+
+    private void syncPastDueCheckouts(Connection con) throws Exception {
+        String sql = "UPDATE reservations SET status = 'CHECKED_OUT', updated_at = NOW() " +
+                "WHERE check_out_date < ? AND status IN ('CONFIRMED', 'CHECKED_IN')";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setDate(1, java.sql.Date.valueOf(LocalDate.now()));
+            ps.executeUpdate();
+        }
     }
 }

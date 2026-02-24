@@ -19,7 +19,7 @@
       <a href="rooms.html" class="nav-link active">🛏️ Rooms</a>
       <a href="reservations.html" class="nav-link">📅 Reservations</a>
       <a href="billing.html" class="nav-link">💳 Billing</a>
-      <a href="reports.html" class="nav-link">📈 Reports</a>
+      <a href="reports.html" class="nav-link" data-role="MANAGER">📈 Reports</a>
       <a href="help.html" class="nav-link">📈 Help</a>
       <button id="logoutBtn" class="btn btn-logout">Logout</button>
     </nav>
@@ -34,7 +34,7 @@
     </header>
 
     <div class="page-body">
-      <div class="card">
+      <div class="card" data-role="MANAGER">
         <div class="card-body">
           <form id="roomForm">
             <div class="form-group">
@@ -68,6 +68,11 @@
           </form>
         </div>
       </div>
+      <div class="card hidden" id="roomManagerOnlyNote">
+        <div class="card-body">
+          <p class="text-muted">Room creation is restricted to manager accounts.</p>
+        </div>
+      </div>
 
       <div class="card mt-3">
         <div class="card-body">
@@ -80,8 +85,12 @@
   </main>
 </div>
 
+<script src="js/auth-guard.js"></script>
 <script src="js/api.js"></script>
 <script>
+  (async () => {
+  if (window.requireAuth && !(await window.requireAuth())) return;
+
   let allRooms = [];
 
   async function fetchRooms() {
@@ -190,6 +199,10 @@
 
     try {
       const response = await API.rooms.create(payload);
+      if (!response.success) {
+        alert(response.message || 'Failed to save room');
+        return;
+      }
       alert(response.message || 'Room saved');
       await refreshRoomViews();
     } catch {
@@ -207,6 +220,14 @@
     }
   })();
 
+  window.addEventListener('ovr:role-ready', (event) => {
+    const role = (event?.detail?.role || '').toUpperCase();
+    const note = document.getElementById('roomManagerOnlyNote');
+    if (note) {
+      note.classList.toggle('hidden', role !== 'RECEPTIONIST');
+    }
+  });
+
   document.getElementById('logoutBtn').addEventListener('click', async () => {
     const ctx = window.location.pathname.split('/')[1];
     const base = ctx && !ctx.includes('.') ? `/${ctx}` : '';
@@ -220,6 +241,7 @@
       window.location.href = 'index.html';
     }
   });
+  })();
 </script>
 </body>
 </html>

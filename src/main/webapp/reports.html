@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reports - Ocean View Resort</title>
+    <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body data-required-role="MANAGER">
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h1>🌊 Ocean View</h1>
+            <span>Resort Management</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+            <a href="reservations.html" class="nav-link">📅 Reservations</a>
+            <a href="guests.html" class="nav-link">👥 Guests</a>
+            <a href="rooms.html" class="nav-link">🛏️ Rooms</a>
+            <a href="billing.html" class="nav-link">💳 Billing</a>
+            <a href="reports.html" class="nav-link active" data-role="MANAGER">📈 Reports</a>
+            <a href="help.html" class="nav-link">❓ Help</a>
+            <button id="logoutBtn" class="btn btn-logout">Logout</button>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="page-header">
+            <div>
+                <h1 class="page-title">Reports</h1>
+                <p class="page-subtitle">View analytics and reports</p>
+            </div>
+        </header>
+
+        <div class="page-body">
+            <div class="card reports-filter-card mb-3">
+                <div class="card-body reports-filter-row">
+                    <div class="form-group">
+                        <label class="text-small">Start Date</label>
+                        <input type="date" id="startDate" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label class="text-small">End Date</label>
+                        <input type="date" id="endDate" class="form-control" />
+                    </div>
+                    <button class="btn btn-primary reports-generate-btn" id="generateBtn">Generate Reports</button>
+                </div>
+            </div>
+
+            <div class="reports-grid">
+                <section class="card report-card">
+                    <div class="report-card-header">📅 Booking Report</div>
+                    <div class="card-body" id="bookingReport"><div class="loading"><div class="spinner"></div></div></div>
+                </section>
+
+                <section class="card report-card">
+                    <div class="report-card-header">💰 Revenue Report</div>
+                    <div class="card-body" id="revenueReport"><div class="loading"><div class="spinner"></div></div></div>
+                </section>
+
+                <section class="card report-card">
+                    <div class="report-card-header">🛏️ Occupancy Report</div>
+                    <div class="card-body" id="occupancyReport"><div class="loading"><div class="spinner"></div></div></div>
+                </section>
+
+                <section class="card report-card">
+                    <div class="report-card-header">📊 Room Status Overview</div>
+                    <div class="card-body" id="roomDistribution"><div class="loading"><div class="spinner"></div></div></div>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="js/auth-guard.js"></script>
+<script src="js/api.js"></script>
+<script>
+    (async () => {
+    if (window.requireAuth && !(await window.requireAuth())) return;
+
+    const today = new Date();
+    const monthAgo = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
+    document.getElementById('startDate').value = monthAgo.toISOString().split('T')[0];
+    document.getElementById('endDate').value = today.toISOString().split('T')[0];
+
+    const REPORTS = [
+        { type: 'booking', id: 'bookingReport', render: renderBooking },
+        { type: 'revenue', id: 'revenueReport', render: renderRevenue },
+        { type: 'occupancy', id: 'occupancyReport', render: renderOccupancy },
+        { type: 'occupancy', id: 'roomDistribution', render: renderRoomStatus }
+    ];
+
+    function money(v) {
+        const n = Number(v || 0);
+        return n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    }
+
+    async function loadReports() {
+        const from = document.getElementById('startDate').value;
+        const to = document.getElementById('endDate').value;
+
+        await Promise.all(REPORTS.map(async (cfg) => {
+            const el = document.getElementById(cfg.id);
+            try {
+                const res = await API.reports.get(cfg.type, from, to);
+                if (!res.success) throw new Error(res.message || 'Failed');
+                el.innerHTML = cfg.render(res.data || {});
+            } catch {
+                el.innerHTML = '<p class="text-danger">Error loading report</p>';
+            }
+        }));
+    }
+
+    function renderBooking(d) {
+        return `
+      <div class="mini-stats-grid">
+        <div class="mini-stat"><div class="mini-value blue">${d.totalBookings || 0}</div><div class="mini-label">Total Bookings</div></div>
+        <div class="mini-stat"><div class="mini-value teal">${d.totalNightsBooked || 0}</div><div class="mini-label">Nights Booked</div></div>
+        <div class="mini-stat"><div class="mini-value amber">${d.averageStayLength || 0}</div><div class="mini-label">Avg Stay (nights)</div></div>
+        <div class="mini-stat"><div class="mini-value green">${(d.byStatus && d.byStatus.CONFIRMED) || 0}</div><div class="mini-label">Confirmed</div></div>
+      </div>
+    `;
+    }
+
+    function renderRevenue(d) {
+        return `
+      <div class="revenue-hero">
+        <div class="revenue-value">${money(d.totalRevenue)}</div>
+        <div class="revenue-label">Total Revenue</div>
+      </div>
+      <table class="table compact-table">
+        <tr><td>Room Charges</td><td class="text-right"><strong>${money(d.roomCharges)}</strong></td></tr>
+        <tr><td>Service Charges</td><td class="text-right"><strong>${money(d.serviceCharges)}</strong></td></tr>
+        <tr><td>Tax Collected</td><td class="text-right"><strong>${money(d.taxCollected)}</strong></td></tr>
+        <tr><td>Pending Revenue</td><td class="text-right pending"><strong>${money(d.pendingRevenue)}</strong></td></tr>
+      </table>
+      <div class="text-small text-muted">${d.paidBills || 0} paid bills • ${d.pendingBills || 0} pending</div>
+    `;
+    }
+
+    function renderOccupancy(d) {
+        const rate = Number(d.currentOccupancyRate || 0);
+        return `
+      <div class="occupancy-wrap">
+        <div class="donut" style="--p:${Math.max(0, Math.min(100, rate))}">
+          <div class="donut-text">${rate}%</div>
+        </div>
+        <div class="text-muted">Current Occupancy Rate</div>
+      </div>
+      <table class="table compact-table">
+        <tr><td>Total Rooms</td><td class="text-right"><strong>${d.totalRooms || 0}</strong></td></tr>
+        <tr><td>Currently Occupied</td><td class="text-right"><strong>${d.currentlyOccupied || 0}</strong></td></tr>
+        <tr><td>Room Nights Booked</td><td class="text-right"><strong>${d.roomNightsBooked || 0}</strong></td></tr>
+        <tr><td>Period Occupancy</td><td class="text-right"><strong>${d.periodOccupancyRate || 0}%</strong></td></tr>
+      </table>
+    `;
+    }
+
+    function renderRoomStatus(d) {
+        const by = d.roomsByStatus || {};
+        const keys = ['AVAILABLE', 'MAINTENANCE', 'OCCUPIED', 'RESERVED'];
+        const total = keys.reduce((a, k) => a + Number(by[k] || 0), 0);
+
+        const color = {
+            AVAILABLE: '#2ea44f',
+            MAINTENANCE: '#f59e0b',
+            OCCUPIED: '#ef4444',
+            RESERVED: '#3b82f6'
+        };
+
+        return `
+      <div>
+        ${keys.map((k) => {
+            const c = Number(by[k] || 0);
+            const p = total ? ((c / total) * 100).toFixed(1) : '0.0';
+            return `
+            <div class="status-row">
+              <div class="status-head"><span>${k}</span><strong>${c} (${p}%)</strong></div>
+              <div class="status-track"><div class="status-bar" style="width:${p}%;background:${color[k]};"></div></div>
+            </div>
+          `;
+        }).join('')}
+        <div class="text-center text-muted mt-3"><strong>${total}</strong> total rooms</div>
+      </div>
+    `;
+    }
+
+    document.getElementById('generateBtn').addEventListener('click', loadReports);
+    window.addEventListener('ovr:role-ready', (event) => {
+        const role = (event?.detail?.role || '').toUpperCase();
+        if (role === 'MANAGER') {
+            loadReports();
+        }
+    });
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        const ctx = window.location.pathname.split('/')[1];
+        const base = ctx && !ctx.includes('.') ? `/${ctx}` : '';
+
+        try {
+            await fetch(`${base}/api/auth/logout`, {
+                method: 'POST',
+                credentials: 'include'
+            });
+        } finally {
+            window.location.href = 'index.html';
+        }
+    });
+    })();
+</script>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Billing - Ocean View Resort</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h1>🌊 Ocean View</h1>
+            <span>Resort Management</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+            <a href="guests.html" class="nav-link">👥 Guests</a>
+            <a href="rooms.html" class="nav-link">🛏️ Rooms</a>
+            <a href="reservations.html" class="nav-link">📅 Reservations</a>
+            <a href="billing.html" class="nav-link active">💳 Billing</a>
+            <a href="reports.html" class="nav-link" data-role="MANAGER">📈 Reports</a>
+            <a href="help.html" class="nav-link">❓ Help</a>
+            <button id="logoutBtn" class="btn btn-logout">Logout</button>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="page-header">
+            <div>
+                <h1 class="page-title">Billing</h1>
+                <p class="page-subtitle">Generate and manage bills</p>
+            </div>
+        </header>
+
+        <div class="page-body">
+            <div class="card">
+                <div class="card-body">
+                    <form id="billForm">
+                        <div class="grid grid-3">
+                            <div class="form-group">
+                                <label>Reservation ID</label>
+                                <input type="number" id="reservationId" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Service Charges</label>
+                                <input type="number" id="serviceCharges" class="form-control" step="0.01" min="0" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Discount Amount</label>
+                                <input type="number" id="discountAmount" class="form-control" step="0.01" min="0" value="0">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Generate Bill</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-body">
+                    <div class="d-flex gap-2 align-center" style="flex-wrap: wrap;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Status</label>
+                            <select id="statusFilter" class="form-control">
+                                <option value="">All</option>
+                                <option value="PENDING">PENDING</option>
+                                <option value="PAID">PAID</option>
+                                <option value="CANCELLED">CANCELLED</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-secondary" id="refreshBillsBtn" style="margin-top: 23px;">Refresh</button>
+                    </div>
+                    <div id="billResult" class="mt-3 text-muted">No bill generated yet.</div>
+                    <div class="table-container mt-3" id="billsContainer">
+                        <div class="loading"><div class="spinner"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<div class="modal-overlay" id="billModal" style="display:none;">
+    <div class="modal modal-lg">
+        <div class="modal-header">
+            <h3 class="modal-title">Bill Details</h3>
+            <button class="modal-close" type="button" id="closeBillModal">&times;</button>
+        </div>
+        <div class="modal-body" id="billDetailsContent"></div>
+        <div class="modal-footer" id="billModalFooter"></div>
+    </div>
+</div>
+
+<script src="js/auth-guard.js"></script>
+<script src="js/api.js"></script>
+<script>
+    (async () => {
+    if (window.requireAuth && !(await window.requireAuth())) return;
+
+    function money(v) {
+        return Number(v || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function textOrDash(v) {
+        return v === null || v === undefined || v === "" ? "-" : v;
+    }
+
+    function closeBillModal() {
+        document.getElementById("billModal").style.display = "none";
+    }
+
+    async function loadBills() {
+        const status = document.getElementById("statusFilter").value;
+        const container = document.getElementById("billsContainer");
+        container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+
+        try {
+            const response = await API.bills.list(status);
+            const bills = response.data || [];
+
+            if (!bills.length) {
+                container.innerHTML = "<p>No bills found.</p>";
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Bill ID</th>
+                            <th>Reservation</th>
+                            <th>Guest</th>
+                            <th>Room Type</th>
+                            <th>Room Charge</th>
+                            <th>Service</th>
+                            <th>Tax</th>
+                            <th>Discount</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${bills.map(b => `
+                            <tr>
+                                <td>${b.billId}</td>
+                                <td>${b.reservationId}</td>
+                                <td>${textOrDash(b.reservation?.guest?.guestName)}</td>
+                                <td>${textOrDash(b.reservation?.room?.roomType)}</td>
+                                <td>${money(b.roomCharges)}</td>
+                                <td>${money(b.serviceCharges)}</td>
+                                <td>${money(b.taxAmount)}</td>
+                                <td>${money(b.discountAmount)}</td>
+                                <td><strong>${money(b.totalAmount)}</strong></td>
+                                <td>${b.status}</td>
+                                <td class="d-flex gap-1">
+                                    <button class="btn btn-secondary btn-sm" onclick="viewBill(${b.billId})">View</button>
+                                    ${b.status === "PENDING" ? `<button class="btn btn-primary btn-sm" onclick="confirmPayment(${b.billId})">Confirm</button>` : ""}
+                                </td>
+                            </tr>
+                        `).join("")}
+                    </tbody>
+                </table>
+            `;
+        } catch (err) {
+            container.innerHTML = "<p>Error loading bills.</p>";
+        }
+    }
+
+    async function viewBill(billId) {
+        try {
+            const billRes = await API.bills.getById(billId);
+            const bill = billRes.data;
+            if (!bill) {
+                alert("Bill not found.");
+                return;
+            }
+
+            let reservation = bill.reservation || null;
+            let guest = reservation?.guest || null;
+            let room = reservation?.room || null;
+
+            if (!guest || !room) {
+                try {
+                    const reservationRes = await API.reservations.getById(bill.reservationId);
+                    reservation = reservationRes.data || reservation;
+                    if (!guest && reservation?.guestId) {
+                        const guestRes = await API.guests.getById(reservation.guestId);
+                        guest = guestRes.data || guest;
+                    }
+                } catch (e) {
+                    // Details are optional for display.
+                }
+            }
+
+            document.getElementById("billDetailsContent").innerHTML = `
+                <div class="bill-details">
+                    <div class="bill-details-head">
+                        <h3>Invoice #${bill.billId}</h3>
+                        <p class="bill-details-meta">
+                            Status: ${textOrDash(bill.status)} | Reservation: ${textOrDash(bill.reservationId)}
+                        </p>
+                    </div>
+
+                    <div class="bill-sections">
+                        <section class="bill-section">
+                            <h4>Guest Details</h4>
+                            <div class="bill-kv">
+                                <span class="k">Name</span><span>${textOrDash(guest?.guestName)}</span>
+                                <span class="k">Email</span><span>${textOrDash(guest?.guestEmail)}</span>
+                                <span class="k">Contact</span><span>${textOrDash(guest?.guestContact)}</span>
+                                <span class="k">Passport / NIC</span><span>${textOrDash(guest?.guestPassport || guest?.guestNIC)}</span>
+                            </div>
+                        </section>
+
+                        <section class="bill-section">
+                            <h4>Reservation Details</h4>
+                            <div class="bill-kv">
+                                <span class="k">Check-in</span><span>${textOrDash(reservation?.checkInDate)}</span>
+                                <span class="k">Check-out</span><span>${textOrDash(reservation?.checkOutDate)}</span>
+                                <span class="k">Room Type</span><span>${textOrDash(room?.roomType)}</span>
+                                <span class="k">Rate / Night</span><span>${money(room?.ratePerNight)}</span>
+                            </div>
+                        </section>
+                    </div>
+
+                    <div class="bill-breakdown">
+                        <table>
+                            <tr><td>Room Charges</td><td>${money(bill.roomCharges)}</td></tr>
+                            <tr><td>Service Charges</td><td>${money(bill.serviceCharges)}</td></tr>
+                            <tr><td>Tax</td><td>${money(bill.taxAmount)}</td></tr>
+                            <tr><td>Discount</td><td>- ${money(bill.discountAmount)}</td></tr>
+                            <tr><td>Total</td><td>${money(bill.totalAmount)}</td></tr>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById("billModalFooter").innerHTML = `
+                <button class="btn btn-secondary" type="button" onclick="closeBillModal()">Close</button>
+                ${bill.status === "PENDING" ? `<button class="btn btn-primary" type="button" onclick="confirmPayment(${bill.billId}, true)">Confirm Payment</button>` : ""}
+            `;
+
+            document.getElementById("billModal").style.display = "flex";
+        } catch (err) {
+            alert("Error loading bill details.");
+        }
+    }
+
+    async function confirmPayment(billId, fromModal) {
+        const method = prompt("Payment method (CASH/CARD/TRANSFER):", "CASH");
+        if (!method) return;
+
+        try {
+            const response = await API.bills.markAsPaid(billId, method.toUpperCase());
+            if (!response.success) {
+                alert(response.message || "Payment update failed.");
+                return;
+            }
+            if (fromModal) closeBillModal();
+            await loadBills();
+        } catch (err) {
+            alert("Error confirming payment.");
+        }
+    }
+
+    document.getElementById("billForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const reservationId = Number(document.getElementById("reservationId").value);
+        const serviceCharges = Number(document.getElementById("serviceCharges").value || 0);
+        const discountAmount = Number(document.getElementById("discountAmount").value || 0);
+
+        try {
+            const response = await API.bills.generate(reservationId, serviceCharges, discountAmount);
+            if (!response.success) {
+                document.getElementById("billResult").textContent = response.message || "Failed to generate bill.";
+                return;
+            }
+            const bill = response.data;
+            document.getElementById("billResult").innerHTML = `
+                <strong>Bill generated:</strong> #${bill.billId} |
+                <strong>Total:</strong> ${money(bill.totalAmount)} |
+                <strong>Status:</strong> ${textOrDash(bill.status)}
+            `;
+            await loadBills();
+        } catch (err) {
+            document.getElementById("billResult").textContent = "Error generating bill.";
+        }
+    });
+
+    document.getElementById("statusFilter").addEventListener("change", loadBills);
+    document.getElementById("refreshBillsBtn").addEventListener("click", loadBills);
+    document.getElementById("closeBillModal").addEventListener("click", closeBillModal);
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+        const ctx = window.location.pathname.split("/")[1];
+        const base = ctx && !ctx.includes(".") ? `/${ctx}` : "";
+        try {
+            await fetch(`${base}/api/auth/logout`, { method: "POST", credentials: "include" });
+        } finally {
+            window.location.href = "index.html";
+        }
+    });
+
+    loadBills();
+    })();
+</script>
+</body>
+</html>

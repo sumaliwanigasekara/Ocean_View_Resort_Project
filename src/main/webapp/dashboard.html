@@ -1,0 +1,218 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Ocean View Resort</title>
+    <link rel="stylesheet" href="css/styles.css?v=20260219-1">
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <h1>🌊 Ocean View</h1>
+            <span>Resort Management</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="nav-link active">📊 Dashboard</a>
+            <a href="guests.html" class="nav-link">👥 Guests</a>
+            <a href="rooms.html" class="nav-link">🛏️ Rooms</a>
+            <a href="reservations.html" class="nav-link">📅 Reservations</a>
+            <a href="billing.html" class="nav-link">💳 Billing</a>
+            <a href="reports.html" class="nav-link" data-role="MANAGER">📈 Reports</a>
+            <a href="help.html" class="nav-link">📈 Help</a>
+            <button id="logoutBtn" class="btn btn-logout">Logout</button>
+        </nav>
+    </aside>
+
+    <main class="main-content">
+        <header class="page-header">
+            <div>
+                <h1 class="page-title">Dashboard</h1>
+                <p class="page-subtitle" id="currentDate"></p>
+            </div>
+        </header>
+
+        <div class="page-body">
+            <div class="stats-grid" id="statsContainer">
+                <div class="loading"><div class="spinner"></div></div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3 class="card-title">Recent Reservations</h3>
+                    <a href="reservations.html" class="btn btn-sm btn-outline">View All</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-container" id="recentReservationsContainer">
+                        <div class="loading"><div class="spinner"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="js/auth-guard.js"></script>
+<script src="js/api.js"></script>
+<script>
+    (async () => {
+    if (window.requireAuth && !(await window.requireAuth())) return;
+
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString();
+
+    function formatDate(dateValue) {
+        if (!dateValue) return '-';
+        const dt = new Date(dateValue);
+        return Number.isNaN(dt.getTime()) ? dateValue : dt.toLocaleDateString();
+    }
+
+    function toNumber(value) {
+        const n = Number(value);
+        return Number.isFinite(n) ? n : 0;
+    }
+
+    function formatCurrency(value) {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            maximumFractionDigits: 0
+        }).format(toNumber(value));
+    }
+
+    async function loadStats() {
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+        const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+        try {
+            const response = await API.reports.get('dashboard', firstDay, lastDay);
+            if (response.success) {
+                const data = response.data;
+                document.getElementById('statsContainer').innerHTML = `
+          <div class="stat-card">
+            <div class="stat-head">
+              <span class="stat-icon">🛏️</span>
+              <span class="stat-chip">Live</span>
+            </div>
+            <div class="stat-value">${toNumber(data.availableRooms)}</div>
+            <div class="stat-label">Available Rooms</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-head">
+              <span class="stat-icon">📈</span>
+              <span class="stat-chip">Today</span>
+            </div>
+            <div class="stat-value">${toNumber(data.occupancyRate).toFixed(1)}%</div>
+            <div class="stat-label">Occupancy Rate</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-head">
+              <span class="stat-icon">🟢</span>
+              <span class="stat-chip">Arrivals</span>
+            </div>
+            <div class="stat-value">${toNumber(data.todayCheckIns)}</div>
+            <div class="stat-label">Today Check-ins</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-head">
+              <span class="stat-icon">🔵</span>
+              <span class="stat-chip">Departures</span>
+            </div>
+            <div class="stat-value">${toNumber(data.todayCheckOuts)}</div>
+            <div class="stat-label">Today Check-outs</div>
+          </div>
+          <div class="stat-card stat-card-wide">
+            <div class="stat-head">
+              <span class="stat-icon">💵</span>
+              <span class="stat-chip">This Month</span>
+            </div>
+            <div class="stat-value">${formatCurrency(data.monthlyRevenue)}</div>
+            <div class="stat-label">Monthly Revenue</div>
+          </div>
+        `;
+            } else {
+                document.getElementById('statsContainer').innerHTML = '<p>Error loading stats</p>';
+            }
+        } catch (e) {
+            document.getElementById('statsContainer').innerHTML = '<p>Error loading stats</p>';
+        }
+    }
+
+    async function loadRecentReservations() {
+        const container = document.getElementById('recentReservationsContainer');
+        const now = new Date();
+        const from = new Date(now);
+        from.setFullYear(now.getFullYear() - 1);
+        const to = new Date(now);
+        to.setFullYear(now.getFullYear() + 1);
+
+        try {
+            const response = await API.reservations.search(
+                from.toISOString().split('T')[0],
+                to.toISOString().split('T')[0]
+            );
+
+            if (!response.success) {
+                container.innerHTML = '<p class="text-muted">Unable to load reservations.</p>';
+                return;
+            }
+
+            const list = (response.data || []).slice().sort((a, b) => (b.reservationId || 0) - (a.reservationId || 0));
+            if (!list.length) {
+                container.innerHTML = '<p class="text-muted">No reservations found.</p>';
+                return;
+            }
+
+            container.innerHTML = `
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Guest ID</th>
+                    <th>Room ID</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${list.map((r) => `
+                    <tr>
+                      <td>${r.reservationId ?? '-'}</td>
+                      <td>${r.guestId ?? '-'}</td>
+                      <td>${r.roomId ?? '-'}</td>
+                      <td>${formatDate(r.checkInDate)}</td>
+                      <td>${formatDate(r.checkOutDate)}</td>
+                      <td>${r.status ?? '-'}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            `;
+        } catch (e) {
+            container.innerHTML = '<p class="text-muted">Error loading reservations.</p>';
+        }
+    }
+
+    loadStats();
+    loadRecentReservations();
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+        const ctx = window.location.pathname.split('/')[1];
+        const base = ctx && !ctx.includes('.') ? `/${ctx}` : '';
+
+        try {
+        await fetch(`${base}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+    });
+    } finally {
+        window.location.href = 'index.html';
+    }
+    });
+    })();
+</script>
+
+</body>
+</html>

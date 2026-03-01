@@ -1,0 +1,993 @@
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\controller\AuthController.java
+DECLARATIONS:
+  public class AuthController extends BaseController {
+ATTRIBUTES:
+  private final AuthService authService;
+METHODS:
+  public AuthController() {
+  public AuthController(AuthService authService) {
+  public LoginResponse login(LoginRequest request) {
+  protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+  private void setRoleCookie(HttpServletResponse response, HttpServletRequest request, String value, int maxAgeSeconds) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\controller\BaseController.java
+DECLARATIONS:
+  public abstract class BaseController extends HttpServlet {
+ATTRIBUTES:
+  (none)
+METHODS:
+  protected <T> T readJson(HttpServletRequest request, Class<T> type) throws IOException {
+  protected void writeJson(HttpServletResponse response, Object payload, int status) throws IOException {
+  protected void writeError(HttpServletResponse response, String message, int status) throws IOException {
+  protected Map<String, Object> okResponse(String message, Object data) {
+  protected String getSessionRole(HttpServletRequest request) {
+  protected boolean requireManagerRole(HttpServletRequest request, HttpServletResponse response) throws IOException {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\controller\BillingController.java
+DECLARATIONS:
+  public class BillingController extends BaseController {
+ATTRIBUTES:
+  private final BillingService billingService;
+  private final ReservationDAOImpl reservationDAO;
+  private final GuestDAOImpl guestDAO;
+  private final RoomDAOImpl roomDAO;
+METHODS:
+  public BillingController() {
+  public BillingController(BillingService billingService) {
+  public java.math.BigDecimal calculateTotal(com.oceanview.model.Bill bill) {
+  protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+  private void enrichBills(List<Bill> bills) {
+  private void enrichBill(Bill bill) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\controller\GuestController.java
+DECLARATIONS:
+  public class GuestController extends BaseController {
+ATTRIBUTES:
+  private static final Logger LOGGER = Logger.getLogger(GuestController.class.getName());
+  private final GuestService guestService;
+  private final AsyncEmailDispatcher emailDispatcher;
+METHODS:
+  public GuestController() {
+  public GuestController(GuestService guestService) {
+  public GuestController(GuestService guestService, AsyncEmailDispatcher emailDispatcher) {
+  protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+  private String sendGuestCreatedEmail(Guest saved) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\controller\ReportController.java
+DECLARATIONS:
+  public class ReportController extends BaseController {
+ATTRIBUTES:
+  (none)
+METHODS:
+  protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\controller\ReservationController.java
+DECLARATIONS:
+  public class ReservationController extends BaseController {
+ATTRIBUTES:
+  private static final Logger LOGGER = Logger.getLogger(ReservationController.class.getName());
+  private final ReservationService reservationService;
+  private final GuestDAOImpl guestDAO;
+  private final RoomDAOImpl roomDAO;
+  private final AsyncEmailDispatcher emailDispatcher;
+METHODS:
+  public ReservationController() {
+  public ReservationController(ReservationService reservationService) {
+  public Reservation addReservation(Reservation reservation) {
+  protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+  private String sendReservationCreatedEmail(Reservation saved) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\controller\RoomController.java
+DECLARATIONS:
+  public class RoomController extends BaseController {
+ATTRIBUTES:
+  private final RoomService roomService = new RoomServiceImpl(new RoomDAOImpl());
+METHODS:
+  protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dao\BillDAO.java
+DECLARATIONS:
+  public interface BillDAO {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dao\GuestDAO.java
+DECLARATIONS:
+  public interface GuestDAO {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dao\impl\BillDAOImpl.java
+DECLARATIONS:
+  public class BillDAOImpl implements BillDAO {
+ATTRIBUTES:
+  (none)
+METHODS:
+  public Bill findById(Long billId) {
+  public Bill findByReservationId(long reservationId) {
+  private Bill getBill(long reservationId, String sql) {
+  public Bill createBill(Bill bill) {
+  public Bill generateBill(long reservationId, BigDecimal serviceCharges, BigDecimal discountAmount) {
+  public BigDecimal calculateRevenue(LocalDate start, LocalDate end) {
+  public List<Bill> findBetweenDates(LocalDate start, LocalDate end) {
+  public List<Bill> findByStatus(Bill.BillStatus status) {
+  public List<Bill> findAll() {
+  public boolean markAsPaid(long billId, String paymentMethod) {
+  private Bill mapBill(ResultSet rs) throws Exception {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dao\impl\GuestDAOImpl.java
+DECLARATIONS:
+  public class GuestDAOImpl implements GuestDAO {
+ATTRIBUTES:
+  (none)
+METHODS:
+  public Guest findById(Long guestId) {
+  public Guest save(Guest guest) {
+  public List<Guest> search(String term) {
+  private Guest mapGuest(ResultSet rs) throws Exception {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dao\impl\ReservationDAOImpl.java
+DECLARATIONS:
+  public class ReservationDAOImpl implements ReservationDAO {
+ATTRIBUTES:
+  (none)
+METHODS:
+  public Reservation findById(Long reservationId) {
+  public Reservation save(Reservation reservation) {
+  public boolean hasOverlappingReservation(Long roomId, LocalDate checkIn, LocalDate checkOut) {
+  public List<Reservation> listByDateRange(LocalDate from, LocalDate to) {
+  public long count() {
+  public long countByStatus(Reservation.ReservationStatus status) {
+  public List<Reservation> findBetweenDates(LocalDate start, LocalDate end) {
+  public List<Reservation> findTodayCheckIns() {
+  public List<Reservation> findTodayCheckOuts() {
+  private Reservation mapReservation(ResultSet rs) throws Exception {
+  private void syncPastDueCheckouts(Connection con) throws Exception {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dao\impl\RoomDAOImpl.java
+DECLARATIONS:
+  public class RoomDAOImpl implements RoomDAO {
+ATTRIBUTES:
+  (none)
+METHODS:
+  public Room findById(Long roomId) {
+  public Room save(Room room) {
+  public List<Room> list(String status) {
+  public void updateStatus(long roomId, Room.RoomStatus status) {
+  public long count() {
+  public int countByStatus(Room.RoomStatus status) {
+  public List<Room> findByRoomType(Room.RoomType type) {
+  public Map<String, Object> getRoomTypeSummary(Room.RoomType type, LocalDate date) {
+  private Room mapRoom(ResultSet rs) throws Exception {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dao\impl\UserDAOImpl.java
+DECLARATIONS:
+  public class UserDAOImpl implements UserDAO {
+ATTRIBUTES:
+  (none)
+METHODS:
+  public User findByEmail(String email) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dao\ReservationDAO.java
+DECLARATIONS:
+  public interface ReservationDAO {
+ATTRIBUTES:
+  (none)
+METHODS:
+  default boolean hasOverlappingReservation(Long roomId, java.time.LocalDate checkIn, java.time.LocalDate checkOut) {
+  default java.util.List<Reservation> listByDateRange(java.time.LocalDate from, java.time.LocalDate to) {
+  default long count() { return 0; }
+  default long countByStatus(Reservation.ReservationStatus status) { return 0; }
+  default java.util.List<Reservation> findBetweenDates(java.time.LocalDate start, java.time.LocalDate end) {
+  default java.util.List<Reservation> findTodayCheckIns() {
+  default java.util.List<Reservation> findTodayCheckOuts() {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dao\RoomDAO.java
+DECLARATIONS:
+  public interface RoomDAO {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dao\UserDAO.java
+DECLARATIONS:
+  public interface UserDAO {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dto\ApiResponse.java
+DECLARATIONS:
+  public class ApiResponse {
+ATTRIBUTES:
+  private boolean success;
+  private String message;
+METHODS:
+  public ApiResponse() {
+  public ApiResponse(boolean success, String message) {
+  public boolean isSuccess() { return success; }
+  public void setSuccess(boolean success) { this.success = success; }
+  public String getMessage() { return message; }
+  public void setMessage(String message) { this.message = message; }
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dto\BillDTO.java
+DECLARATIONS:
+  public class BillDTO {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dto\BillItemDTO.java
+DECLARATIONS:
+  public class BillItemDTO {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dto\GuestDTO.java
+DECLARATIONS:
+  public class GuestDTO {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dto\LoginRequest.java
+DECLARATIONS:
+  public class LoginRequest {
+ATTRIBUTES:
+  private String email;
+  private String password;
+METHODS:
+  public LoginRequest() {
+  public LoginRequest(String email, String password) {
+  public String getEmail() {
+  public void setEmail(String email) {
+  public String getPassword() {
+  public void setPassword(String password) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dto\LoginResponse.java
+DECLARATIONS:
+  public class LoginResponse {
+ATTRIBUTES:
+  private boolean success;
+  private String message;
+  private Long userId;
+  private String userName;
+  private String role;
+METHODS:
+  public LoginResponse() {
+  public LoginResponse(boolean success, String message, Long userId, String userName, String role) {
+  public static LoginResponse success(Long userId, String userName, String role) {
+  public static LoginResponse failure(String message) {
+  public boolean isSuccess() {
+  public void setSuccess(boolean success) {
+  public String getMessage() {
+  public void setMessage(String message) {
+  public Long getUserId() {
+  public void setUserId(Long userId) {
+  public String getUserName() {
+  public void setUserName(String userName) {
+  public String getRole() {
+  public void setRole(String role) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dto\ReportMetric.java
+DECLARATIONS:
+  public class ReportMetric {
+ATTRIBUTES:
+  private String label;
+  private Integer count;
+  private BigDecimal amount;
+METHODS:
+  public ReportMetric() {}
+  public ReportMetric(String label, Integer count, BigDecimal amount) {
+  public String getLabel() { return label; }
+  public void setLabel(String label) { this.label = label; }
+  public Integer getCount() { return count; }
+  public void setCount(Integer count) { this.count = count; }
+  public BigDecimal getAmount() { return amount; }
+  public void setAmount(BigDecimal amount) { this.amount = amount; }
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dto\ReportResult.java
+DECLARATIONS:
+  public class ReportResult {
+ATTRIBUTES:
+  private String reportType;
+  private LocalDate fromDate;
+  private LocalDate toDate;
+  private List<ReportMetric> metrics = new ArrayList<>();
+METHODS:
+  public ReportResult() {}
+  public ReportResult(String reportType, LocalDate fromDate, LocalDate toDate) {
+  public String getReportType() { return reportType; }
+  public void setReportType(String reportType) { this.reportType = reportType; }
+  public LocalDate getFromDate() { return fromDate; }
+  public void setFromDate(LocalDate fromDate) { this.fromDate = fromDate; }
+  public LocalDate getToDate() { return toDate; }
+  public void setToDate(LocalDate toDate) { this.toDate = toDate; }
+  public List<ReportMetric> getMetrics() { return metrics; }
+  public void setMetrics(List<ReportMetric> metrics) { this.metrics = metrics; }
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dto\ReservationDTO.java
+DECLARATIONS:
+  public class ReservationDTO {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dto\RoomDTO.java
+DECLARATIONS:
+  public class RoomDTO {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\dto\UserDTO.java
+DECLARATIONS:
+  public class UserDTO {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\factory\BillGenerationEngine.java
+DECLARATIONS:
+  public interface BillGenerationEngine {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\factory\BillGenerationEngineFactory.java
+DECLARATIONS:
+  public final class BillGenerationEngineFactory {
+  public enum Mode { SP, DIRECT, AUTO }
+ATTRIBUTES:
+  (none)
+METHODS:
+  private BillGenerationEngineFactory() {}
+  public static Mode resolveMode() {
+  public static BillGenerationEngine create(Mode mode, BillDAO billDAO, ReservationDAO reservationDAO, RoomDAO roomDAO) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\factory\DirectSqlBillGenerationEngine.java
+DECLARATIONS:
+  public class DirectSqlBillGenerationEngine implements BillGenerationEngine {
+ATTRIBUTES:
+  private final BillDAO billDAO;
+  private final ReservationDAO reservationDAO;
+  private final RoomDAO roomDAO;
+METHODS:
+  public DirectSqlBillGenerationEngine(BillDAO billDAO, ReservationDAO reservationDAO, RoomDAO roomDAO) {
+  public Bill generate(long reservationId, BigDecimal serviceCharges, BigDecimal discountAmount) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\factory\EmailServiceFactory.java
+DECLARATIONS:
+  public final class EmailServiceFactory {
+ATTRIBUTES:
+  (none)
+METHODS:
+  private EmailServiceFactory() {
+  public static EmailService createDefault() {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\factory\StoredProcedureBillGenerationEngine.java
+DECLARATIONS:
+  public class StoredProcedureBillGenerationEngine implements BillGenerationEngine {
+ATTRIBUTES:
+  private final BillDAO billDAO;
+METHODS:
+  public StoredProcedureBillGenerationEngine(BillDAO billDAO) {
+  public Bill generate(long reservationId, BigDecimal serviceCharges, BigDecimal discountAmount) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\filter\AuthFilter.java
+DECLARATIONS:
+  public class AuthFilter implements Filter {
+ATTRIBUTES:
+  (none)
+METHODS:
+  public void init(FilterConfig filterConfig) {
+  public void destroy() {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\filter\CorsFilter.java
+DECLARATIONS:
+  public class CorsFilter {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\mapper\BillMapper.java
+DECLARATIONS:
+  public class BillMapper {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\mapper\GuestMapper.java
+DECLARATIONS:
+  public class GuestMapper {
+ATTRIBUTES:
+  (none)
+METHODS:
+  public String ping() {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\mapper\ReservationMapper.java
+DECLARATIONS:
+  public class ReservationMapper {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\mapper\RoomMapper.java
+DECLARATIONS:
+  public class RoomMapper {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\mapper\UserMapper.java
+DECLARATIONS:
+  public class UserMapper {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\model\Bill.java
+DECLARATIONS:
+  public class Bill {
+  public enum BillStatus {
+ATTRIBUTES:
+  private Long billId;
+  private Long reservationId;
+  private BigDecimal roomCharges;
+  private BigDecimal serviceCharges;
+  private BigDecimal taxAmount;
+  private BigDecimal discountAmount;
+  private BigDecimal totalAmount;
+  private BillStatus status;
+  private String paymentMethod;
+  private LocalDateTime paidAt;
+  private LocalDateTime created_at;
+  private LocalDateTime updated_at;
+  private Reservation reservation;
+  private List<BillItem> billItems = new ArrayList<>();
+METHODS:
+  public Bill() {}
+  public Bill(Long billId, Long reservationId, BigDecimal totalAmount, BillStatus status) {
+  public Long getBillId() { return billId; }
+  public void setBillId(Long billId) { this.billId = billId; }
+  public Long getReservationId() { return reservationId; }
+  public void setReservationId(Long reservationId) { this.reservationId = reservationId; }
+  public BigDecimal getRoomCharges() { return roomCharges; }
+  public void setRoomCharges(BigDecimal roomCharges) { this.roomCharges = roomCharges; }
+  public BigDecimal getServiceCharges() { return serviceCharges; }
+  public void setServiceCharges(BigDecimal serviceCharges) { this.serviceCharges = serviceCharges; }
+  public BigDecimal getTaxAmount() { return taxAmount; }
+  public void setTaxAmount(BigDecimal taxAmount) { this.taxAmount = taxAmount; }
+  public BigDecimal getDiscountAmount() { return discountAmount; }
+  public void setDiscountAmount(BigDecimal discountAmount) { this.discountAmount = discountAmount; }
+  public BigDecimal getTotalAmount() { return totalAmount; }
+  public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
+  public BillStatus getStatus() { return status; }
+  public void setStatus(BillStatus status) { this.status = status; }
+  public String getPaymentMethod() { return paymentMethod; }
+  public void setPaymentMethod(String paymentMethod) { this.paymentMethod = paymentMethod; }
+  public LocalDateTime getPaidAt() { return paidAt; }
+  public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
+  public LocalDateTime getCreated_at() { return created_at; }
+  public void setCreated_at(LocalDateTime created_at) { this.created_at = created_at; }
+  public LocalDateTime getUpdated_at() { return updated_at; }
+  public void setUpdated_at(LocalDateTime updated_at) { this.updated_at = updated_at; }
+  public Reservation getReservation() { return reservation; }
+  public void setReservation(Reservation reservation) { this.reservation = reservation; }
+  public List<BillItem> getBillItems() { return billItems; }
+  public void setBillItems(List<BillItem> billItems) { this.billItems = billItems; }
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\model\BillItem.java
+DECLARATIONS:
+  public class BillItem {
+  public enum ItemCategory {
+ATTRIBUTES:
+  private Long id;
+  private Long billId;
+  private String description;
+  private int quantity;
+  private BigDecimal unitPrice;
+  private BigDecimal totalPrice;
+  private ItemCategory category;
+  private LocalDateTime created_at;
+METHODS:
+  public BillItem() {}
+  public Long getId() { return id; }
+  public void setId(Long id) { this.id = id; }
+  public Long getBillId() { return billId; }
+  public void setBillId(Long billId) { this.billId = billId; }
+  public String getDescription() { return description; }
+  public void setDescription(String description) { this.description = description; }
+  public int getQuantity() { return quantity; }
+  public void setQuantity(int quantity) {
+  public BigDecimal getUnitPrice() { return unitPrice; }
+  public void setUnitPrice(BigDecimal unitPrice) {
+  public BigDecimal getTotalPrice() { return totalPrice; }
+  public void setTotalPrice(BigDecimal totalPrice) { this.totalPrice = totalPrice; }
+  public ItemCategory getCategory() { return category; }
+  public void setCategory(ItemCategory category) { this.category = category; }
+  public LocalDateTime getCreated_at() { return created_at; }
+  public void setCreated_at(LocalDateTime createdAt) { this.created_at = createdAt; }
+  private void calculateTotal() {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\model\Guest.java
+DECLARATIONS:
+  public class Guest {
+ATTRIBUTES:
+  private Long guestId;
+  private String guestName;
+  private String guestPassport;
+  private String guestEmail;
+  private String guestContact;
+  private String guestAddress;
+  private String guestNIC;
+  private LocalDateTime created_at;
+  private LocalDateTime updated_at;
+METHODS:
+  public Guest() {}
+  public Guest(Long guestId, String guestName, String guestPassport, String guestEmail, String guestContact, String guestAddress, String guestNIC) {
+  public Long getGuestId() { return guestId; }
+  public void setGuestId(Long guestId) { this.guestId = guestId; }
+  public String getGuestName() { return guestName; }
+  public void setGuestName(String guestName) { this.guestName = guestName; }
+  public String getGuestPassport() { return guestPassport; }
+  public void setGuestPassport(String guestPassport) { this.guestPassport = guestPassport; }
+  public String getGuestEmail() { return guestEmail; }
+  public void setGuestEmail(String guestEmail) { this.guestEmail = guestEmail; }
+  public String getGuestContact() { return guestContact; }
+  public void setGuestContact(String guestContact) { this.guestContact = guestContact; }
+  public String getGuestAddress() { return guestAddress; }
+  public void setGuestAddress(String guestAddress) { this.guestAddress = guestAddress; }
+  public String getGuestNIC() { return guestNIC; }
+  public void setGuestNIC(String guestNIC) { this.guestNIC = guestNIC; }
+  public LocalDateTime getCreated_at() { return created_at; }
+  public void setCreated_at(LocalDateTime created_at) { this.created_at = created_at; }
+  public LocalDateTime getUpdated_at() { return updated_at; }
+  public void setUpdated_at(LocalDateTime updated_at) { this.updated_at = updated_at; }
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\model\Reservation.java
+DECLARATIONS:
+  public class Reservation {
+  public enum ReservationStatus {
+ATTRIBUTES:
+  private Long reservationId;
+  private Long guestId;
+  private Long roomId;
+  private LocalDate checkInDate;
+  private LocalDate checkOutDate;
+  private int numberOfGuests;
+  private ReservationStatus status;
+  private BigDecimal totalAmount;
+  private LocalDateTime createdAt;
+  private LocalDateTime updatedAt;
+  private Guest guest;
+  private Room room;
+METHODS:
+  public Reservation() {}
+  public long getNumberOfNights() {
+  public Long getReservationId() { return reservationId; }
+  public void setReservationId(Long reservationId) { this.reservationId = reservationId; }
+  public Long getGuestId() { return guestId; }
+  public void setGuestId(Long guestId) { this.guestId = guestId; }
+  public Long getRoomId() { return roomId; }
+  public void setRoomId(Long roomId) { this.roomId = roomId; }
+  public LocalDate getCheckInDate() { return checkInDate; }
+  public void setCheckInDate(LocalDate checkInDate) { this.checkInDate = checkInDate; }
+  public LocalDate getCheckOutDate() { return checkOutDate; }
+  public void setCheckOutDate(LocalDate checkOutDate) { this.checkOutDate = checkOutDate; }
+  public int getNumberOfGuests() { return numberOfGuests; }
+  public void setNumberOfGuests(int numberOfGuests) { this.numberOfGuests = numberOfGuests; }
+  public ReservationStatus getStatus() { return status; }
+  public void setStatus(ReservationStatus status) { this.status = status; }
+  public BigDecimal getTotalAmount() { return totalAmount; }
+  public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
+  public LocalDateTime getCreatedAt() { return createdAt; }
+  public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+  public LocalDateTime getUpdatedAt() { return updatedAt; }
+  public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+  public Guest getGuest() { return guest; }
+  public void setGuest(Guest guest) { this.guest = guest; }
+  public Room getRoom() { return room; }
+  public void setRoom(Room room) { this.room = room; }
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\model\Room.java
+DECLARATIONS:
+  public class Room {
+  public enum RoomType {
+  public enum RoomStatus {
+ATTRIBUTES:
+  private Long roomId;
+  private RoomType roomType;
+  private BigDecimal ratePerNight;
+  private int maxOccupancy;
+  private RoomStatus roomStatus;
+  private LocalDateTime created_at;
+  private LocalDateTime updated_at;
+METHODS:
+  public Room() {}
+  public Room(Long roomId, RoomType roomType, BigDecimal ratePerNight, RoomStatus roomStatus, int maxOccupancy) {
+  public Long getRoomId() { return roomId; }
+  public void setRoomId(Long roomId) { this.roomId = roomId; }
+  public RoomType getRoomType() { return roomType; }
+  public void setRoomType(RoomType roomType) { this.roomType = roomType; }
+  public BigDecimal getRatePerNight() { return ratePerNight; }
+  public void setRatePerNight(BigDecimal ratePerNight) { this.ratePerNight = ratePerNight; }
+  public int getMaxOccupancy() { return maxOccupancy; }
+  public void setMaxOccupancy(int maxOccupancy) { this.maxOccupancy = maxOccupancy; }
+  public RoomStatus getRoomStatus() { return roomStatus; }
+  public void setRoomStatus(RoomStatus status) { this.roomStatus = status; }
+  public LocalDateTime getCreated_at() { return created_at; }
+  public void setCreated_at(LocalDateTime created_at) { this.created_at = created_at; }
+  public LocalDateTime getUpdated_at() { return updated_at; }
+  public void setUpdated_at(LocalDateTime updated_at) { this.updated_at = updated_at; }
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\model\User.java
+DECLARATIONS:
+  public class User {
+  public enum UserRole {
+  public enum UserStatus {
+ATTRIBUTES:
+  private Long userId;
+  private String userName;
+  private String password;
+  private String userEmail;
+  private UserRole userRole;
+  private UserStatus userStatus;
+  private LocalDateTime created_at;
+  private LocalDateTime updated_at;
+METHODS:
+  public User() {}
+  public long getUserId() {return userId; }
+  public void setUserId(Long userId) {this.userId = userId;}
+  public String getUserEmail() {return userEmail; }
+  public void setUserEmail(String userEmail) {this.userEmail = userEmail;}
+  public String getPassword() {return password; }
+  public void setPassword(String password) {this.password = password;}
+  public String getUserName() {return userName; }
+  public void setUserName(String userName) {this.userName = userName;}
+  public UserRole getUserRole() {return userRole; }
+  public void setUserRole(UserRole userRole) {this.userRole = userRole;}
+  public UserStatus getUserStatus() {return userStatus; }
+  public void setUserStatus(UserStatus userStatus) {this.userStatus = userStatus;}
+  public LocalDateTime getCreated_at() {return created_at; }
+  public void setCreated_at(LocalDateTime created_at) {this.created_at = created_at;}
+  public LocalDateTime getUpdated_at() {return updated_at; }
+  public void setUpdated_at(LocalDateTime updated_at) {this.updated_at = updated_at;}
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\service\AuthService.java
+DECLARATIONS:
+  public interface AuthService {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\service\BillingService.java
+DECLARATIONS:
+  public interface BillingService {
+ATTRIBUTES:
+  (none)
+METHODS:
+  default Bill generateBill(long reservationId, BigDecimal serviceCharges, BigDecimal discountAmount) {
+  default Bill findBillByReservation(long reservationId) {
+  default java.util.List<Bill> listBills() {
+  default java.util.List<Bill> listBillsByStatus(Bill.BillStatus status) {
+  default boolean markBillAsPaid(long billId, String paymentMethod) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\service\email\AsyncEmailDispatcher.java
+DECLARATIONS:
+  public class AsyncEmailDispatcher {
+ATTRIBUTES:
+  private static final Logger LOGGER = Logger.getLogger(AsyncEmailDispatcher.class.getName());
+  private final EmailService emailService;
+METHODS:
+  public AsyncEmailDispatcher(EmailService emailService) {
+  public void send(EmailMessage message) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\service\email\EmailMessage.java
+DECLARATIONS:
+  public class EmailMessage {
+ATTRIBUTES:
+  private final String to;
+  private final String subject;
+  private final String body;
+METHODS:
+  public EmailMessage(String to, String subject, String body) {
+  public String getTo() {
+  public String getSubject() {
+  public String getBody() {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\service\email\EmailService.java
+DECLARATIONS:
+  public interface EmailService {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\service\email\EmailTemplateBuilder.java
+DECLARATIONS:
+  public final class EmailTemplateBuilder {
+ATTRIBUTES:
+  (none)
+METHODS:
+  private EmailTemplateBuilder() {
+  public static EmailMessage guestCreated(Guest guest) {
+  public static EmailMessage reservationCreated(Reservation reservation, Guest guest, Room room) {
+  private static boolean isBlank(String value) {
+  private static String safe(Object value) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\service\email\impl\NoopEmailService.java
+DECLARATIONS:
+  public class NoopEmailService implements EmailService {
+ATTRIBUTES:
+  private static final Logger LOGGER = Logger.getLogger(NoopEmailService.class.getName());
+METHODS:
+  public void send(EmailMessage message) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\service\email\impl\SmtpEmailService.java
+DECLARATIONS:
+  public class SmtpEmailService implements EmailService {
+ATTRIBUTES:
+  private final MailConfig config;
+METHODS:
+  public SmtpEmailService(MailConfig config) {
+  public void send(EmailMessage message) {
+  protected PasswordAuthentication getPasswordAuthentication() {
+  private boolean isBlank(String value) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\service\GuestService.java
+DECLARATIONS:
+  public interface GuestService {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\service\impl\AuthServiceImpl.java
+DECLARATIONS:
+  public class AuthServiceImpl implements AuthService {
+ATTRIBUTES:
+  private final UserDAO userDAO;
+METHODS:
+  public AuthServiceImpl(UserDAO userDAO) {
+  public LoginResponse login(LoginRequest request) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\service\impl\BillingServiceImpl.java
+DECLARATIONS:
+  public class BillingServiceImpl implements BillingService {
+ATTRIBUTES:
+  private final BillDAO billDAO;
+  private final ReservationDAO reservationDAO;
+  private final RoomDAO roomDAO;
+  private final BillGenerationEngine generationEngine;
+METHODS:
+  public BillingServiceImpl(BillDAO billDAO) {
+  public BillingServiceImpl(BillDAO billDAO, ReservationDAO reservationDAO, RoomDAO roomDAO) {
+  public BigDecimal calculateTotal(Bill bill) {
+  public Bill generateBill(long reservationId, BigDecimal serviceCharges, BigDecimal discountAmount) {
+  public Bill findBillByReservation(long reservationId) {
+  public List<Bill> listBills() {
+  public List<Bill> listBillsByStatus(Bill.BillStatus status) {
+  public boolean markBillAsPaid(long billId, String paymentMethod) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\service\impl\GuestServiceImpl.java
+DECLARATIONS:
+  public class GuestServiceImpl implements GuestService {
+ATTRIBUTES:
+  private final GuestDAO guestDAO;
+METHODS:
+  public GuestServiceImpl(GuestDAO guestDAO) {
+  public Guest createGuest(Guest guest) {
+  public Guest getGuest(Long guestId) {
+  public List<Guest> searchGuests(String term) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\service\impl\ReportServiceImpl.java
+DECLARATIONS:
+  public class ReportServiceImpl implements ReportService {
+ATTRIBUTES:
+  private final ReservationDAO reservationDAO;
+  private final RoomDAO roomDAO;
+  private final BillDAO billDAO;
+METHODS:
+  public ReportServiceImpl(ReservationDAO reservationDAO, RoomDAO roomDAO, BillDAO billDAO) {
+  public ReportServiceImpl() {
+  public Map<String, Object> getDashboardStats() {
+  public Map<String, Object> getBookingReport(LocalDate startDate, LocalDate endDate) {
+  public Map<String, Object> getRevenueReport(LocalDate startDate, LocalDate endDate) {
+  public Map<String, Object> getOccupancyReport(LocalDate startDate, LocalDate endDate) {
+  public BigDecimal getTotalRevenue(LocalDate startDate, LocalDate endDate) {
+  public double getOccupancyRate(LocalDate startDate, LocalDate endDate) {
+  public Map<String, Integer> getRoomTypeDistribution() {
+  public Map<String, BigDecimal> getMonthlyRevenueTrend(int months) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\service\impl\ReservationServiceImpl.java
+DECLARATIONS:
+  public class ReservationServiceImpl implements ReservationService {
+ATTRIBUTES:
+  private final ReservationDAO reservationDAO;
+  private final RoomDAO roomDAO;
+  private final List<ReservationValidationStrategy> validationStrategies;
+METHODS:
+  public ReservationServiceImpl(ReservationDAO reservationDAO, RoomDAO roomDAO) {
+  public ReservationServiceImpl(ReservationDAO reservationDAO) {
+  public Reservation addReservation(Reservation reservation) {
+  public Reservation getReservationDetails(Long reservationId) {
+  public List<Reservation> listReservations(LocalDate from, LocalDate to) {
+  private void applyValidationStrategies(Reservation reservation) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\service\impl\RoomServiceImpl.java
+DECLARATIONS:
+  public class RoomServiceImpl implements RoomService {
+ATTRIBUTES:
+  private final RoomDAO roomDAO;
+METHODS:
+  public RoomServiceImpl(RoomDAO roomDAO) {
+  public Room createRoom(Room room) {
+  public Room getRoom(Long roomId) {
+  public List<Room> listRooms(String status) {
+  public void updateStatus(Long roomId, Room.RoomStatus status) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\service\ReportService.java
+DECLARATIONS:
+  public interface ReportService {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\service\ReservationService.java
+DECLARATIONS:
+  public interface ReservationService {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\service\RoomService.java
+DECLARATIONS:
+  public interface RoomService {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\strategy\reservation\BasicReservationValidationStrategy.java
+DECLARATIONS:
+  public class BasicReservationValidationStrategy implements ReservationValidationStrategy {
+ATTRIBUTES:
+  (none)
+METHODS:
+  public void validate(Reservation reservation, ReservationValidationContext context) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\strategy\reservation\ReservationValidationContext.java
+DECLARATIONS:
+  public class ReservationValidationContext {
+ATTRIBUTES:
+  private final ReservationDAO reservationDAO;
+  private final RoomDAO roomDAO;
+  private Room room;
+METHODS:
+  public ReservationValidationContext(ReservationDAO reservationDAO, RoomDAO roomDAO) {
+  public ReservationDAO getReservationDAO() {
+  public RoomDAO getRoomDAO() {
+  public Room getRoom() {
+  public void setRoom(Room room) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\strategy\reservation\ReservationValidationStrategy.java
+DECLARATIONS:
+  public interface ReservationValidationStrategy {
+ATTRIBUTES:
+  (none)
+METHODS:
+  (none)
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\strategy\reservation\ReservationValidationStrategyFactory.java
+DECLARATIONS:
+  public final class ReservationValidationStrategyFactory {
+ATTRIBUTES:
+  (none)
+METHODS:
+  private ReservationValidationStrategyFactory() {
+  public static List<ReservationValidationStrategy> defaultStrategies(RoomDAO roomDAO) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\strategy\reservation\RoomAvailabilityValidationStrategy.java
+DECLARATIONS:
+  public class RoomAvailabilityValidationStrategy implements ReservationValidationStrategy {
+ATTRIBUTES:
+  (none)
+METHODS:
+  public void validate(Reservation reservation, ReservationValidationContext context) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\strategy\reservation\RoomOccupancyValidationStrategy.java
+DECLARATIONS:
+  public class RoomOccupancyValidationStrategy implements ReservationValidationStrategy {
+ATTRIBUTES:
+  (none)
+METHODS:
+  public void validate(Reservation reservation, ReservationValidationContext context) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\util\DBConnection.java
+DECLARATIONS:
+  public final class DBConnection {
+ATTRIBUTES:
+  private static final String PROPERTIES_FILE = "db.properties";
+  private static final DBConnection INSTANCE = new DBConnection();
+  private final Properties properties = new Properties();
+METHODS:
+  private DBConnection() {
+  public static DBConnection getInstance() {
+  public Connection openConnection() throws SQLException {
+  public static Connection getConnection() throws SQLException {
+  public static void closeQuietly(AutoCloseable closeable) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\util\JsonUtil.java
+DECLARATIONS:
+  public final class JsonUtil {
+ATTRIBUTES:
+  (none)
+METHODS:
+  private JsonUtil() {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\util\MailConfig.java
+DECLARATIONS:
+  public final class MailConfig {
+ATTRIBUTES:
+  private static final String PROPERTIES_FILE = "mail.properties";
+  private static final MailConfig INSTANCE = new MailConfig();
+  private final Properties properties = new Properties();
+METHODS:
+  private MailConfig() {
+  public static MailConfig getInstance() {
+  public boolean isEnabled() {
+  public String getProvider() {
+  public String getFrom() {
+  public String getSmtpHost() {
+  public int getSmtpPort() {
+  public String getSmtpUsername() {
+  public String getSmtpPassword() {
+  public boolean isStartTlsEnabled() {
+  public boolean isAuthEnabled() {
+  public String get(String key, String defaultValue) {
+---
+FILE: C:\Users\Sumali\IdeaProjects\Ocean_View_Resort_Project\src\main\java\com\oceanview\util\ValidationUtil.java
+DECLARATIONS:
+  public final class ValidationUtil {
+ATTRIBUTES:
+  private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$");
+  private static final Pattern PHONE_PATTERN = Pattern.compile("^[0-9+()\\-\\s]{7,20}$");
+METHODS:
+  private ValidationUtil() {
+  public static void requireNonNull(Object value, String fieldName) {
+  public static void requireNonBlank(String value, String fieldName) {
+  public static void requireEmail(String email) {
+  public static void requirePhone(String phone) {
+  public static void ensureDateRange(LocalDate start, LocalDate end) {
+  public static void requirePositive(Long value, String fieldName) {
+  public static void requirePositive(Integer value, String fieldName) {
+  public static void requirePositive(BigDecimal value, String fieldName) {
+---

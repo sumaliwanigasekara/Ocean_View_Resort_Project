@@ -2,8 +2,11 @@ package com.oceanview.controller;
 
 import com.oceanview.factory.EmailServiceFactory;
 import com.oceanview.dao.impl.GuestDAOImpl;
+import com.oceanview.dto.GuestDTO;
+import com.oceanview.mapper.GuestMapper;
 import com.oceanview.model.Guest;
 import com.oceanview.service.email.AsyncEmailDispatcher;
+import com.oceanview.service.email.EmailMessage;
 import com.oceanview.service.email.EmailTemplateBuilder;
 import com.oceanview.service.GuestService;
 import com.oceanview.service.impl.GuestServiceImpl;
@@ -22,19 +25,29 @@ public class GuestController extends BaseController {
 
     private final GuestService guestService;
     private final AsyncEmailDispatcher emailDispatcher;
+    private final GuestMapper guestMapper;
 
     public GuestController() {
-        this(new GuestServiceImpl(new GuestDAOImpl()), new AsyncEmailDispatcher(EmailServiceFactory.createDefault()));
+        this(
+                new GuestServiceImpl(new GuestDAOImpl()),
+                new AsyncEmailDispatcher(EmailServiceFactory.createDefault()),
+                new GuestMapper()
+        );
     }
 
     // For tests
     public GuestController(GuestService guestService) {
-        this(guestService, new AsyncEmailDispatcher(EmailServiceFactory.createDefault()));
+        this(guestService, new AsyncEmailDispatcher(EmailServiceFactory.createDefault()), new GuestMapper());
     }
 
     public GuestController(GuestService guestService, AsyncEmailDispatcher emailDispatcher) {
+        this(guestService, emailDispatcher, new GuestMapper());
+    }
+
+    public GuestController(GuestService guestService, AsyncEmailDispatcher emailDispatcher, GuestMapper guestMapper) {
         this.guestService = guestService;
         this.emailDispatcher = emailDispatcher;
+        this.guestMapper = guestMapper;
     }
 
     @Override
@@ -48,12 +61,12 @@ public class GuestController extends BaseController {
                     return;
                 }
                 List<Guest> guests = guestService.searchGuests(term);
-                writeJson(response, okResponse("ok", guests), HttpServletResponse.SC_OK);
+                writeJson(response, okResponse("ok", guestMapper.toDTOList(guests)), HttpServletResponse.SC_OK);
                 return;
             }
             long guestId = Long.parseLong(path.replace("/", ""));
             Guest guest = guestService.getGuest(guestId);
-            writeJson(response, okResponse("ok", guest), HttpServletResponse.SC_OK);
+            writeJson(response, okResponse("ok", guestMapper.toDTO(guest)), HttpServletResponse.SC_OK);
         } catch (IllegalArgumentException ex) {
             writeError(response, ex.getMessage(), HttpServletResponse.SC_BAD_REQUEST);
         }
@@ -62,20 +75,32 @@ public class GuestController extends BaseController {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            Guest guest = readJson(request, Guest.class);
-            Guest saved = guestService.createGuest(guest);
-            sendGuestCreatedEmail(saved);
-            writeJson(response, okResponse("Guest saved", saved), HttpServletResponse.SC_OK);
+            GuestDTO guestDTO = readJson(request, GuestDTO.class);
+            Guest saved = guestService.createGuest(guestMapper.toEntity(guestDTO));
+            String recipient = sendGuestCreatedEmail(saved);
+            String message = "Guest added successfully.";
+            if (recipient != null) {
+                message += " Email sent to guest email address: " + recipient + ".";
+            } else {
+                message += " Email notification skipped (guest email unavailable).";
+            }
+            writeJson(response, okResponse(message, guestMapper.toDTO(saved)), HttpServletResponse.SC_OK);
         } catch (IllegalArgumentException ex) {
             writeError(response, ex.getMessage(), HttpServletResponse.SC_BAD_REQUEST);
         }
     }
 
-    private void sendGuestCreatedEmail(Guest saved) {
+    private String sendGuestCreatedEmail(Guest saved) {
         try {
-            emailDispatcher.send(EmailTemplateBuilder.guestCreated(saved));
+            EmailMessage message = EmailTemplateBuilder.guestCreated(saved);
+            if (message == null) {
+                return null;
+            }
+            emailDispatcher.send(message);
+            return message.getTo();
         } catch (Exception ex) {
             LOGGER.log(Level.WARNING, "Guest created but email dispatch could not be queued.", ex);
+            return null;
         }
     }
 }

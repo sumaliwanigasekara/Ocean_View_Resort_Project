@@ -2,7 +2,6 @@ CREATE DATABASE IF NOT EXISTS oceanview_resort;
 USE oceanview_resort;
 
 SET FOREIGN_KEY_CHECKS = 0;
-DROP TABLE IF EXISTS bill_items;
 DROP TABLE IF EXISTS bills;
 DROP TABLE IF EXISTS reservations;
 DROP TABLE IF EXISTS rooms;
@@ -93,16 +92,4 @@ CREATE TABLE IF NOT EXISTS bills (
                                      FOREIGN KEY (reservationId) REFERENCES reservations(reservationId) ON DELETE RESTRICT
 );
 
-
-CREATE TABLE IF NOT EXISTS bill_items (
-                                          id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                          billId BIGINT NOT NULL,
-                                          description VARCHAR(255) NOT NULL,
-                                          quantity INT NOT NULL DEFAULT 1,
-                                          unit_price DECIMAL(10, 2) NOT NULL,
-                                          total_price DECIMAL(10, 2) NOT NULL,
-                                          category ENUM('ROOM_CHARGE', 'FOOD_BEVERAGE', 'LAUNDRY', 'SPA', 'MINIBAR', 'TELEPHONE', 'OTHER') NOT NULL DEFAULT 'OTHER',
-                                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                                          FOREIGN KEY (billId) REFERENCES bills(billId) ON DELETE CASCADE
-);
 

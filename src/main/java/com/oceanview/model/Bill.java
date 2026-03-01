@@ -2,8 +2,6 @@ package com.oceanview.model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Bill {
     private Long billId;
@@ -21,7 +19,6 @@ public class Bill {
 
     // Transient fields
     private Reservation reservation;
-    private List<BillItem> billItems = new ArrayList<>();
 
     public enum BillStatus {
         PENDING, PAID, PARTIALLY_PAID, CANCELLED, REFUNDED
@@ -75,7 +72,4 @@ public class Bill {
 
     public Reservation getReservation() { return reservation; }
     public void setReservation(Reservation reservation) { this.reservation = reservation; }
-
-    public List<BillItem> getBillItems() { return billItems; }
-    public void setBillItems(List<BillItem> billItems) { this.billItems = billItems; }
 }

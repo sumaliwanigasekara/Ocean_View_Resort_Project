@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 public class BillMapper {
     private final ReservationMapper reservationMapper = new ReservationMapper();
-    private final BillItemMapper billItemMapper = new BillItemMapper();
 
     public BillDTO toDTO(Bill bill) {
         if (bill == null) {
@@ -30,7 +29,6 @@ public class BillMapper {
         dto.setCreated_at(bill.getCreated_at());
         dto.setUpdated_at(bill.getUpdated_at());
         dto.setReservation(reservationMapper.toDTO(bill.getReservation()));
-        dto.setBillItems(billItemMapper.toDTOList(bill.getBillItems()));
         return dto;
     }
 
@@ -52,7 +50,6 @@ public class BillMapper {
         bill.setCreated_at(dto.getCreated_at());
         bill.setUpdated_at(dto.getUpdated_at());
         bill.setReservation(reservationMapper.toEntity(dto.getReservation()));
-        bill.setBillItems(billItemMapper.toEntityList(dto.getBillItems()));
         return bill;
     }
 

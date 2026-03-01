@@ -195,7 +195,7 @@
         try {
             const res = await API.reservations.create(payload);
             if (res.success) {
-                alert('Reservation added successfully');
+                alert(res.message || 'Reservation added successfully');
                 await loadRoomsDropdown();
                 await loadReservationsByDate();
             } else {

@@ -264,6 +264,11 @@
         }
     }
 
+    // Inline onclick handlers in generated table/modal require global function access.
+    window.viewBill = viewBill;
+    window.confirmPayment = confirmPayment;
+    window.closeBillModal = closeBillModal;
+
     document.getElementById("billForm").addEventListener("submit", async (e) => {
         e.preventDefault();
 

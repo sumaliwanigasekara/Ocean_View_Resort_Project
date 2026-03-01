@@ -4,6 +4,8 @@ import com.oceanview.dao.impl.BillDAOImpl;
 import com.oceanview.dao.impl.GuestDAOImpl;
 import com.oceanview.dao.impl.ReservationDAOImpl;
 import com.oceanview.dao.impl.RoomDAOImpl;
+import com.oceanview.dto.BillDTO;
+import com.oceanview.mapper.BillMapper;
 import com.oceanview.model.Bill;
 import com.oceanview.model.Guest;
 import com.oceanview.model.Reservation;
@@ -25,12 +27,14 @@ public class BillingController extends BaseController {
     private final ReservationDAOImpl reservationDAO;
     private final GuestDAOImpl guestDAO;
     private final RoomDAOImpl roomDAO;
+    private final BillMapper billMapper;
 
     public BillingController() {
         this.billingService = new BillingServiceImpl(new BillDAOImpl());
         this.reservationDAO = new ReservationDAOImpl();
         this.guestDAO = new GuestDAOImpl();
         this.roomDAO = new RoomDAOImpl();
+        this.billMapper = new BillMapper();
     }
 
     // For tests
@@ -39,8 +43,9 @@ public class BillingController extends BaseController {
         this.reservationDAO = new ReservationDAOImpl();
         this.guestDAO = new GuestDAOImpl();
         this.roomDAO = new RoomDAOImpl();
+        this.billMapper = new BillMapper();
     }
-    
+
     public java.math.BigDecimal calculateTotal(com.oceanview.model.Bill bill) {
         return billingService.calculateTotal(bill);
     }
@@ -53,26 +58,26 @@ public class BillingController extends BaseController {
                 long billId = Long.parseLong(path.replace("/", ""));
                 Bill bill = new BillDAOImpl().findById(billId);
                 enrichBill(bill);
-                writeJson(response, okResponse("ok", bill), HttpServletResponse.SC_OK);
+                writeJson(response, okResponse("ok", billMapper.toDTO(bill)), HttpServletResponse.SC_OK);
                 return;
             }
             String status = request.getParameter("status");
             if (status != null && !status.isBlank()) {
                 List<Bill> bills = billingService.listBillsByStatus(Bill.BillStatus.valueOf(status));
                 enrichBills(bills);
-                writeJson(response, okResponse("ok", bills), HttpServletResponse.SC_OK);
+                writeJson(response, okResponse("ok", billMapper.toDTOList(bills)), HttpServletResponse.SC_OK);
                 return;
             }
             String reservationId = request.getParameter("reservationId");
             if (reservationId == null || reservationId.isBlank()) {
                 List<Bill> bills = billingService.listBills();
                 enrichBills(bills);
-                writeJson(response, okResponse("ok", bills), HttpServletResponse.SC_OK);
+                writeJson(response, okResponse("ok", billMapper.toDTOList(bills)), HttpServletResponse.SC_OK);
                 return;
             }
             Bill bill = billingService.findBillByReservation(Long.parseLong(reservationId));
             enrichBill(bill);
-            writeJson(response, okResponse("ok", bill), HttpServletResponse.SC_OK);
+            writeJson(response, okResponse("ok", billMapper.toDTO(bill)), HttpServletResponse.SC_OK);
         } catch (IllegalArgumentException ex) {
             writeError(response, ex.getMessage(), HttpServletResponse.SC_BAD_REQUEST);
         }
@@ -85,7 +90,7 @@ public class BillingController extends BaseController {
             if (path != null && path.matches("/\\d+/pay")) {
                 String[] parts = path.split("/");
                 long billId = Long.parseLong(parts[1]);
-                Bill payload = readJson(request, Bill.class);
+                BillDTO payload = readJson(request, BillDTO.class);
                 String paymentMethod = (payload != null && payload.getPaymentMethod() != null && !payload.getPaymentMethod().isBlank())
                         ? payload.getPaymentMethod()
                         : "CASH";
@@ -98,7 +103,7 @@ public class BillingController extends BaseController {
                 return;
             }
 
-            Bill payload = readJson(request, Bill.class);
+            BillDTO payload = readJson(request, BillDTO.class);
             if (payload == null) {
                 writeError(response, "Bill payload is required.", HttpServletResponse.SC_BAD_REQUEST);
                 return;
@@ -107,23 +112,29 @@ public class BillingController extends BaseController {
             BigDecimal discount = payload.getDiscountAmount() == null ? BigDecimal.ZERO : payload.getDiscountAmount();
             Bill bill = billingService.generateBill(payload.getReservationId(), serviceCharges, discount);
             enrichBill(bill);
-            writeJson(response, okResponse("Bill generated", bill), HttpServletResponse.SC_OK);
+            writeJson(response, okResponse("Bill generated", billMapper.toDTO(bill)), HttpServletResponse.SC_OK);
         } catch (IllegalArgumentException ex) {
             writeError(response, ex.getMessage(), HttpServletResponse.SC_BAD_REQUEST);
         }
     }
 
     private void enrichBills(List<Bill> bills) {
-        if (bills == null) return;
+        if (bills == null) {
+            return;
+        }
         for (Bill bill : bills) {
             enrichBill(bill);
         }
     }
 
     private void enrichBill(Bill bill) {
-        if (bill == null || bill.getReservationId() == null) return;
+        if (bill == null || bill.getReservationId() == null) {
+            return;
+        }
         Reservation reservation = reservationDAO.findById(bill.getReservationId());
-        if (reservation == null) return;
+        if (reservation == null) {
+            return;
+        }
 
         Guest guest = null;
         if (reservation.getGuestId() != null) {

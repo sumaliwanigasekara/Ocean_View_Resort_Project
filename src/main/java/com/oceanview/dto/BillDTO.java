@@ -4,8 +4,6 @@ import com.oceanview.model.Bill;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 public class BillDTO {
     private Long billId;
@@ -21,7 +19,6 @@ public class BillDTO {
     private LocalDateTime created_at;
     private LocalDateTime updated_at;
     private ReservationDTO reservation;
-    private List<BillItemDTO> billItems = new ArrayList<>();
 
     public BillDTO() {
     }
@@ -128,13 +125,5 @@ public class BillDTO {
 
     public void setReservation(ReservationDTO reservation) {
         this.reservation = reservation;
-    }
-
-    public List<BillItemDTO> getBillItems() {
-        return billItems;
-    }
-
-    public void setBillItems(List<BillItemDTO> billItems) {
-        this.billItems = billItems;
     }
 }
